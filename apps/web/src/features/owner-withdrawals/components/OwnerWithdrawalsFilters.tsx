@@ -1,5 +1,5 @@
-import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
+import { DateFilterInput } from '../../../components/ui/date-filter-input';
 import {
   Select,
   SelectContent,
@@ -50,11 +50,9 @@ export function OwnerWithdrawalsFilters({
         <Label className="text-xs" htmlFor="owDateFrom">
           من تاريخ
         </Label>
-        <Input
-          id="owDateFrom"
-          type="date"
+        <DateFilterInput
           value={dateFrom}
-          onChange={(e) => onDateFromChange(e.target.value)}
+          onChange={onDateFromChange}
         />
       </div>
 
@@ -62,11 +60,9 @@ export function OwnerWithdrawalsFilters({
         <Label className="text-xs" htmlFor="owDateTo">
           إلى تاريخ
         </Label>
-        <Input
-          id="owDateTo"
-          type="date"
+        <DateFilterInput
           value={dateTo}
-          onChange={(e) => onDateToChange(e.target.value)}
+          onChange={onDateToChange}
         />
       </div>
     </div>

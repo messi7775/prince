@@ -47,7 +47,6 @@ export function LinePaymentsTable({
         <TableHeader>
           <TableRow>
             <TableHead>التاريخ</TableHead>
-            <TableHead>الفترة</TableHead>
             <TableHead>المبلغ</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead>ملاحظات</TableHead>
@@ -63,7 +62,6 @@ export function LinePaymentsTable({
                 <TableCell className="text-sm whitespace-nowrap">
                   {formatDateTime(payment.paymentDate)}
                 </TableCell>
-                <TableCell className="num text-sm">{payment.period}</TableCell>
                 <TableCell className="num font-medium">
                   {formatMoney(payment.amount)}
                 </TableCell>

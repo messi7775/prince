@@ -1,5 +1,6 @@
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
+import { DateFilterInput } from '../../../components/ui/date-filter-input';
 import {
   Select,
   SelectContent,
@@ -79,11 +80,9 @@ export function ExpensesFilters({
         <Label className="text-xs" htmlFor="expDateFrom">
           من تاريخ
         </Label>
-        <Input
-          id="expDateFrom"
-          type="date"
+        <DateFilterInput
           value={dateFrom}
-          onChange={(e) => onDateFromChange(e.target.value)}
+          onChange={onDateFromChange}
         />
       </div>
 
@@ -91,11 +90,9 @@ export function ExpensesFilters({
         <Label className="text-xs" htmlFor="expDateTo">
           إلى تاريخ
         </Label>
-        <Input
-          id="expDateTo"
-          type="date"
+        <DateFilterInput
           value={dateTo}
-          onChange={(e) => onDateToChange(e.target.value)}
+          onChange={onDateToChange}
         />
       </div>
     </div>

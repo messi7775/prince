@@ -79,15 +79,17 @@ export class LinePaymentsService {
       }
 
       const amount = new Prisma.Decimal(input.amount);
-      const paymentDate = input.paymentDate
-        ? new Date(input.paymentDate)
-        : new Date();
+      const paymentDate = new Date(input.paymentDate);
+
+      const period =
+        input.period?.trim() ||
+        `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
 
       const payment = await tx.linePayment.create({
         data: {
           lineId,
           amount,
-          period: input.period,
+          period,
           status: 'ACTIVE',
           paymentDate,
           notes: input.notes ?? null,
@@ -101,7 +103,7 @@ export class LinePaymentsService {
           amount,
           sourceType: 'LINE_PAYMENT',
           sourceId: payment.id,
-          description: `دفعة خط ${line.name} - ${input.period}`,
+          description: `دفعة خط ${line.name} - ${period}`,
           movementDate: paymentDate,
           createdBy: userId,
         },
@@ -115,7 +117,7 @@ export class LinePaymentsService {
         newValues: {
           lineId,
           amount: input.amount,
-          period: input.period,
+          period,
         },
         ipAddress: req.ip ?? null,
         userAgent: req.userAgent ?? null,

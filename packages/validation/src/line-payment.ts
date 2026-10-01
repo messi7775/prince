@@ -3,8 +3,8 @@ import { moneySchema } from "./common";
 
 export const createLinePaymentSchema = z.object({
   amount: moneySchema,
-  period: z.string().trim().min(1, "الفترة مطلوبة").max(50),
-  paymentDate: z.coerce.date().optional(),
+  period: z.string().trim().max(50).optional(),
+  paymentDate: z.coerce.date(),
   notes: z.string().trim().max(500).optional().nullable(),
 });
 

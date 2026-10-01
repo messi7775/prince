@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createExpenseSchema,
@@ -18,6 +18,7 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
+import { DatePicker } from '../../../components/ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -56,6 +57,7 @@ export function ExpenseFormDialog({
     reset,
     setValue,
     watch,
+    control,
     formState: { errors },
   } = useForm<CreateExpenseInput>({
     resolver: zodResolver(createExpenseSchema),
@@ -87,7 +89,7 @@ export function ExpenseFormDialog({
           categoryId: '',
           description: '',
           amount: '',
-          expenseDate: undefined,
+          expenseDate: new Date(),
           notes: '',
         });
       }
@@ -186,14 +188,17 @@ export function ExpenseFormDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="expenseDate">التاريخ (اختياري)</Label>
-              <Input
-                id="expenseDate"
-                type="date"
-                {...register('expenseDate', {
-                  setValueAs: (v) => (v ? new Date(v) : undefined),
-                })}
-                disabled={isSubmitting}
+              <Label htmlFor="expenseDate">التاريخ</Label>
+              <Controller
+                name="expenseDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ? new Date(field.value) : undefined}
+                    onChange={(date) => field.onChange(date ?? undefined)}
+                    disabled={isSubmitting}
+                  />
+                )}
               />
             </div>
           </div>

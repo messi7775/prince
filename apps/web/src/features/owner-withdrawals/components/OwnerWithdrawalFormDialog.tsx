@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createOwnerWithdrawalSchema,
@@ -17,6 +17,7 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
+import { DatePicker } from '../../../components/ui/date-picker';
 
 interface OwnerWithdrawalFormDialogProps {
   open: boolean;
@@ -35,13 +36,14 @@ export function OwnerWithdrawalFormDialog({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<CreateOwnerWithdrawalInput>({
     resolver: zodResolver(createOwnerWithdrawalSchema),
     defaultValues: {
       amount: '',
       reason: '',
-      withdrawalDate: undefined,
+      withdrawalDate: new Date(),
       notes: '',
     },
   });
@@ -51,7 +53,7 @@ export function OwnerWithdrawalFormDialog({
       reset({
         amount: '',
         reason: '',
-        withdrawalDate: undefined,
+        withdrawalDate: new Date(),
         notes: '',
       });
     }
@@ -118,14 +120,17 @@ export function OwnerWithdrawalFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="owDate">التاريخ (اختياري)</Label>
-            <Input
-              id="owDate"
-              type="date"
-              {...register('withdrawalDate', {
-                setValueAs: (v) => (v ? new Date(v) : undefined),
-              })}
-              disabled={isSubmitting}
+            <Label htmlFor="owDate">التاريخ</Label>
+            <Controller
+              name="withdrawalDate"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  value={field.value ? new Date(field.value) : undefined}
+                  onChange={(date) => field.onChange(date ?? undefined)}
+                  disabled={isSubmitting}
+                />
+              )}
             />
           </div>
 

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   manualCashOutSchema,
@@ -16,6 +16,7 @@ import {
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
+import { DatePicker } from '../../../components/ui/date-picker';
 import { useToast } from '../../../components/ui/use-toast';
 import { useManualCashOut } from '../hooks/useManualCashOut';
 import { ApiClientError } from '../../../lib/api-client';
@@ -36,15 +37,16 @@ export function ManualCashOutDialog({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<ManualCashOutInput>({
     resolver: zodResolver(manualCashOutSchema),
-    defaultValues: { amount: '', description: '', movementDate: undefined },
+    defaultValues: { amount: '', description: '', movementDate: new Date() },
   });
 
   useEffect(() => {
     if (open) {
-      reset({ amount: '', description: '', movementDate: undefined });
+      reset({ amount: '', description: '', movementDate: new Date() });
     }
   }, [open, reset]);
 
@@ -126,12 +128,17 @@ export function ManualCashOutDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cashOutDate">التاريخ (اختياري)</Label>
-            <Input
-              id="cashOutDate"
-              type="date"
-              {...register('movementDate')}
-              disabled={mutation.isPending}
+            <Label htmlFor="cashOutDate">التاريخ</Label>
+            <Controller
+              name="movementDate"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  value={field.value ? new Date(field.value) : undefined}
+                  onChange={(date) => field.onChange(date ?? undefined)}
+                  disabled={mutation.isPending}
+                />
+              )}
             />
           </div>
         </form>

@@ -1,5 +1,5 @@
-import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
+import { DateFilterInput } from '../../../components/ui/date-filter-input';
 
 interface ReportDateRangeProps {
   dateFrom: string;
@@ -20,22 +20,18 @@ export function ReportDateRange({
         <Label className="text-xs" htmlFor="rptDateFrom">
           من تاريخ
         </Label>
-        <Input
-          id="rptDateFrom"
-          type="date"
+        <DateFilterInput
           value={dateFrom}
-          onChange={(e) => onDateFromChange(e.target.value)}
+          onChange={onDateFromChange}
         />
       </div>
       <div className="space-y-1">
         <Label className="text-xs" htmlFor="rptDateTo">
           إلى تاريخ
         </Label>
-        <Input
-          id="rptDateTo"
-          type="date"
+        <DateFilterInput
           value={dateTo}
-          onChange={(e) => onDateToChange(e.target.value)}
+          onChange={onDateToChange}
         />
       </div>
     </div>
