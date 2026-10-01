@@ -25,6 +25,7 @@ import { Badge } from '../../../components/ui/badge';
 import { useCashReport } from '../hooks/useCashReport';
 import { formatMoney } from '../../../lib/currency';
 import { formatDateTime } from '../../../lib/format';
+import { cashSourceLabel } from '../../../lib/cash-source-labels';
 import { cn } from '../../../lib/utils';
 
 interface CashReportTabProps {
@@ -142,7 +143,7 @@ export function CashReportTab({ dateFrom, dateTo }: CashReportTabProps) {
                       {row.direction === 'IN' ? 'وارد' : 'صادر'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm">{row.sourceType}</TableCell>
+                  <TableCell className="text-sm">{cashSourceLabel(row.sourceType)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-[240px] truncate">
                     {row.description || '—'}
                   </TableCell>

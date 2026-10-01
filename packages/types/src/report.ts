@@ -7,3 +7,7 @@ export interface InventoryReportRow { packageId:UUID; packageName:string; openin
 export interface DistributorReportRow { distributorId:UUID; distributorName:string; totalSales:MoneyString; totalPayments:MoneyString; balance:MoneyString; }
 export interface ExpenseReportRow { categoryId:UUID; categoryName:string; count:number; total:MoneyString; }
 export interface LineReportRow { lineId:UUID; lineName:string; totalPayments:MoneyString; lastPaymentDate:ISODateString|null; status:string; }
+export interface CollectionsReportRow { date:ISODateString; invoiceNumber:string; distributorName:string; amount:MoneyString; status:string; notes:string|null; }
+export interface CollectionsReportSummary { count:number; totalCollected:MoneyString; }
+export interface OwnerWithdrawalsReportRow { date:ISODateString; reason:string; amount:MoneyString; status:string; notes:string|null; }
+export interface OwnerWithdrawalsReportSummary { count:number; totalWithdrawn:MoneyString; }

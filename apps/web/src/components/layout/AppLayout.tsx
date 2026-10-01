@@ -9,18 +9,22 @@ export function AppLayout() {
 
   return (
     <div className="min-h-dvh bg-background">
-      <Header onMenuClick={() => setDrawerOpen(true)} />
+      <div data-print-exclude>
+        <Header onMenuClick={() => setDrawerOpen(true)} />
+      </div>
 
       <div className="flex">
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:block lg:w-64 lg:shrink-0 border-e bg-card">
+        <aside data-print-exclude className="hidden lg:block lg:w-64 lg:shrink-0 border-e bg-card">
           <div className="sticky top-16 h-[calc(100dvh-4rem)] overflow-y-auto">
             <Sidebar />
           </div>
         </aside>
 
         {/* Mobile Drawer */}
-        <MobileDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
+        <div data-print-exclude>
+          <MobileDrawer open={drawerOpen} onOpenChange={setDrawerOpen} />
+        </div>
 
         {/* Main Content */}
         <main className="flex-1 min-w-0">

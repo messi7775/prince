@@ -6,6 +6,7 @@ import {
   Banknote,
   CreditCard,
   Plus,
+  Printer,
   ShoppingCart,
   Users,
 } from 'lucide-react';
@@ -115,15 +116,21 @@ export function SaleDetailsPage() {
           title={`فاتورة ${sale.invoiceNumber}`}
           description={formatDateTime(sale.saleDate)}
           actions={
-            !isCancelled && (
-              <Button
-                variant="destructive"
-                onClick={() => setCancelOpen(true)}
-              >
-                <AlertTriangle className="me-2 h-4 w-4" />
-                إلغاء الفاتورة
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => window.print()}>
+                <Printer className="me-2 h-4 w-4" />
+                طباعة
               </Button>
-            )
+              {!isCancelled && (
+                <Button
+                  variant="destructive"
+                  onClick={() => setCancelOpen(true)}
+                >
+                  <AlertTriangle className="me-2 h-4 w-4" />
+                  إلغاء الفاتورة
+                </Button>
+              )}
+            </div>
           }
         />
 

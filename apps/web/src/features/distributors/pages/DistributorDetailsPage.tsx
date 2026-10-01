@@ -171,6 +171,18 @@ export function DistributorDetailsPage() {
           <TabsTrigger value="payments">التحصيلات</TabsTrigger>
         </TabsList>
 
+        {balanceQuery.data && balanceQuery.data.balance !== '0.00' && balanceQuery.data.balance !== '0' && (
+          <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950">
+            <Banknote className="h-4 w-4 text-amber-600" />
+            <span className="text-muted-foreground">
+              الرصيد المتبقي على الموزع:{' '}
+              <span className="font-bold text-foreground">
+                {formatMoney(balanceQuery.data.balance)}
+              </span>
+            </span>
+          </div>
+        )}
+
         <TabsContent value="sales" className="space-y-4">
           {salesQuery.isLoading ? (
             <LoadingState />
