@@ -1,4 +1,4 @@
-﻿import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { verify, hash } from '@node-rs/argon2';
@@ -55,6 +55,7 @@ export class AuthService {
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
+      tokenVersion: user.tokenVersion,
     };
 
     const token = await this.jwtService.signAsync(payload);
@@ -127,8 +128,8 @@ export class AuthService {
       userAgent: req.get('user-agent') ?? null,
     });
 
-    // ملاحظة: clearCookie يمسح الجلسة الحالية فقط.
-    // لا نُبطل JWT قديمة موجودة على أجهزة أخرى (لا tokenVersion في هذا الإصدار).
+    // تحديث كلمة المرور زاد tokenVersion، وبالتالي تصبح جميع JWT القديمة غير صالحة.
+    // نمسح أيضًا Cookie الحالية حتى يُطلب تسجيل دخول جديد.
     this.clearAuthCookie(res);
   }
 

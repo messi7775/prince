@@ -24,6 +24,8 @@ import { SearchModule } from './search/search.module';
 import { BackupsModule } from './backups/backups.module';
 import { SettingsModule } from './settings/settings.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { HealthModule } from './health/health.module';
+import { validateEnv } from './config/env.validation';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
@@ -33,6 +35,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
       isGlobal: true,
       envFilePath: ['../../.env', '.env'],
       cache: true,
+      validate: validateEnv,
     }),
 
     ThrottlerModule.forRoot([
@@ -64,6 +67,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     BackupsModule,
     SettingsModule,
     DashboardModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [

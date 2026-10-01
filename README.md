@@ -4,9 +4,9 @@
 
 ---
 
-> **Implementation status:** Code and documentation complete.
+> **Implementation status:** Core implementation complete; CI, health checks, session invalidation, backup hardening, and production configuration validation are included.
 >
-> **Operational testing and production deployment pending.**
+> **Production deployment remains environment-specific and must be verified on the target host before go-live.**
 
 ---
 
@@ -30,7 +30,7 @@ React 18 · TypeScript 5.5 · Vite 5 · React Router 6 · TanStack Query 5 · Re
 
 ### Backend
 
-Node.js 20+ · TypeScript 5.5 · NestJS 10 · Prisma 6 · PostgreSQL 15+ · `@node-rs/argon2` · `passport-jwt` · `csrf-csrf` · Helmet · throttler
+Node.js 22.12+ · TypeScript 5.5 · NestJS 10 · Prisma 6 · PostgreSQL 15+ · `@node-rs/argon2` · `passport-jwt` · `csrf-csrf` · Helmet · throttler
 
 ### Database
 
@@ -60,8 +60,8 @@ See `docs/architecture.md` for the full architecture.
 
 ## Requirements
 
-- Node.js ≥ 20.11
-- pnpm ≥ 9
+- Node.js ≥ 22.12
+- pnpm ≥ 11.28
 - PostgreSQL ≥ 15
 - Git
 
@@ -120,6 +120,7 @@ pnpm dev
 
 - Web: http://localhost:5173
 - API: http://localhost:3000/api/v1
+- Health: http://localhost:3000/api/v1/health
 
 ---
 
@@ -298,9 +299,9 @@ Target: **Serv00** or any Node.js + PostgreSQL host.
 
 ## Known Limitations
 
-- **Operational testing has not yet been performed** (no production run)
+- **Production deployment has not yet been verified on the target host**
 - Bundle size warning (>500 KB) — future optimization planned
-- No automated end-to-end tests yet
+- CI runs typecheck, build, and test on every push/PR to `main`
 
 ---
 

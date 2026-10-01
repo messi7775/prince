@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { User } from '../generated/prisma';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -17,7 +17,10 @@ export class UsersService {
   async updatePassword(userId: string, passwordHash: string): Promise<User> {
     return this.prisma.user.update({
       where: { id: userId },
-      data: { passwordHash },
+      data: {
+        passwordHash,
+        tokenVersion: { increment: 1 },
+      },
     });
   }
 }

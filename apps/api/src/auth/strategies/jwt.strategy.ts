@@ -1,4 +1,4 @@
-﻿import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -13,6 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly usersService: UsersService,
   ) {
     const jwtSecret = config.get<string>('JWT_SECRET');
+
     if (!jwtSecret || jwtSecret.length < 32) {
       throw new Error(
         'JWT_SECRET must be set in .env and be at least 32 characters',
@@ -30,6 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
           const cookies = (
             req as Request & { cookies?: Record<string, string> }
           ).cookies;
+
           return cookies?.[cookieName] ?? null;
         },
       ]),
@@ -39,7 +41,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-    if (!payload?.sub || !payload?.email) {
+    if (
+      !payload?.sub ||
+      !payload?.email ||
+      !Number.isInteger(payload.tokenVersion)
+    ) {
       throw new UnauthorizedException({
         message: 'JWT payload غير صالح',
         code: 'UNAUTHORIZED',
@@ -47,6 +53,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     }
 
     const user = await this.usersService.findById(payload.sub);
+
     if (!user) {
       throw new UnauthorizedException({
         message: 'الجلسة غير صالحة',
@@ -54,6 +61,16 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       });
     }
 
-    return { userId: user.id, email: user.email };
+    if (payload.tokenVersion !== user.tokenVersion) {
+      throw new UnauthorizedException({
+        message: 'الجلسة غير صالحة',
+        code: 'UNAUTHORIZED',
+      });
+    }
+
+    return {
+      userId: user.id,
+      email: user.email,
+    };
   }
 }

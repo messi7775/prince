@@ -20,9 +20,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
+
     const response = ctx.getResponse<{
-      status: (code: number) => { json: (body: ApiErrorResponse) => void };
+      status: (code: number) => {
+        json: (body: ApiErrorResponse) => void;
+      };
     }>();
+
     const request = ctx.getRequest<{
       method?: string;
       url?: string;
@@ -30,10 +34,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const payload = this.buildPayload(exception);
 
-    this.logger.error(
-      `${request.method ?? '-'} ${request.url ?? '-'} → ${payload.statusCode} ${payload.body.code}`,
-      exception instanceof Error ? exception.stack : undefined,
-    );
+    const logMessage = `${request.method ?? '-'} ${request.url ?? '-'} → ${payload.statusCode} ${payload.body.code}`;
+
+    if (payload.statusCode >= 500) {
+      this.logger.error(
+        logMessage,
+        exception instanceof Error ? exception.stack : undefined,
+      );
+    } else {
+      this.logger.warn(logMessage);
+    }
 
     response.status(payload.statusCode).json(payload.body);
   }
@@ -67,9 +77,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = raw;
       } else if (raw !== null && typeof raw === 'object') {
         const obj = raw as Record<string, unknown>;
-        if (typeof obj.message === 'string') message = obj.message;
-        else if (Array.isArray(obj.message)) message = obj.message.join('; ');
-        if (typeof obj.code === 'string') code = obj.code;
+
+        if (typeof obj.message === 'string') {
+          message = obj.message;
+        } else if (Array.isArray(obj.message)) {
+          message = obj.message.join('; ');
+        }
+
+        if (typeof obj.code === 'string') {
+          code = obj.code;
+        }
+
         if (obj.details && typeof obj.details === 'object') {
           details = obj.details as Record<string, unknown>;
         }
@@ -91,15 +109,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
       return this.fromPrismaError(exception);
     }
 
-    // 4. Unknown
-    const message =
-      exception instanceof Error ? exception.message : 'Internal server error';
-
+    // 4. Unknown — never expose internal exception details to clients.
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       body: {
         success: false,
-        message,
+        message: 'حدث خطأ داخلي في الخادم',
         code: 'INTERNAL_ERROR',
       },
     };
@@ -107,28 +122,31 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
   private fromPrismaError(
     err: Prisma.PrismaClientKnownRequestError,
-  ): { statusCode: number; body: ApiErrorResponse } {
+  ): {
+    statusCode: number;
+    body: ApiErrorResponse;
+  } {
     switch (err.code) {
-      case 'P2002': {
-        const target = (err.meta?.target as string[] | undefined)?.join(', ') ?? '';
+      case 'P2002':
         return {
           statusCode: HttpStatus.CONFLICT,
           body: {
             success: false,
-            message: `قيمة مكررة${target ? `: ${target}` : ''}`,
+            message: 'القيمة موجودة مسبقًا',
             code: 'UNIQUE_VIOLATION',
           },
         };
-      }
+
       case 'P2003':
         return {
           statusCode: HttpStatus.CONFLICT,
           body: {
             success: false,
-            message: 'انتهاك علاقة (Foreign key)',
+            message: 'لا يمكن تنفيذ العملية بسبب ارتباط هذا العنصر ببيانات أخرى',
             code: 'FOREIGN_KEY_VIOLATION',
           },
         };
+
       case 'P2025':
         return {
           statusCode: HttpStatus.NOT_FOUND,
@@ -138,13 +156,19 @@ export class HttpExceptionFilter implements ExceptionFilter {
             code: 'NOT_FOUND',
           },
         };
+
       default:
+        this.logger.error(
+          `Unhandled Prisma error code: ${err.code}`,
+          err.stack,
+        );
+
         return {
-          statusCode: HttpStatus.BAD_REQUEST,
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           body: {
             success: false,
-            message: `Prisma error: ${err.code}`,
-            code: `PRISMA_${err.code}`,
+            message: 'حدث خطأ داخلي في الخادم',
+            code: 'DATABASE_ERROR',
           },
         };
     }
@@ -154,18 +178,25 @@ export class HttpExceptionFilter implements ExceptionFilter {
     switch (status) {
       case HttpStatus.BAD_REQUEST:
         return 'BAD_REQUEST';
+
       case HttpStatus.UNAUTHORIZED:
         return 'UNAUTHORIZED';
+
       case HttpStatus.FORBIDDEN:
         return 'FORBIDDEN';
+
       case HttpStatus.NOT_FOUND:
         return 'NOT_FOUND';
+
       case HttpStatus.CONFLICT:
         return 'CONFLICT';
+
       case HttpStatus.UNPROCESSABLE_ENTITY:
         return 'UNPROCESSABLE_ENTITY';
+
       case HttpStatus.TOO_MANY_REQUESTS:
         return 'RATE_LIMITED';
+
       default:
         return 'HTTP_ERROR';
     }
