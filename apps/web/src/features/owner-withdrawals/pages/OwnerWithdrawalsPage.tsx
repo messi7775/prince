@@ -8,12 +8,17 @@ import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Pagination } from '../../../components/ui/pagination';
 import { useToast } from '../../../components/ui/use-toast';
+import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { useOwnerWithdrawals } from '../hooks/useOwnerWithdrawals';
 import { useCreateOwnerWithdrawal } from '../hooks/useCreateOwnerWithdrawal';
+import { useUpdateOwnerWithdrawal } from '../hooks/useUpdateOwnerWithdrawal';
+import { useDeleteOwnerWithdrawal } from '../hooks/useDeleteOwnerWithdrawal';
 import { OwnerWithdrawalsFilters } from '../components/OwnerWithdrawalsFilters';
 import { OwnerWithdrawalsTable } from '../components/OwnerWithdrawalsTable';
 import { OwnerWithdrawalFormDialog } from '../components/OwnerWithdrawalFormDialog';
-import { ReverseOwnerWithdrawalDialog } from '../components/ReverseOwnerWithdrawalDialog';
+import { printHTML, buildWithdrawalReceipt } from '../../../lib/print';
+import { formatMoney } from '../../../lib/currency';
+import { formatDate } from '../../../lib/format';
 import { ApiClientError } from '../../../lib/api-client';
 
 const PAGE_LIMIT = 25;
@@ -28,7 +33,8 @@ export function OwnerWithdrawalsPage() {
   const [dateTo, setDateTo] = useState('');
 
   const [formOpen, setFormOpen] = useState(false);
-  const [reverseTarget, setReverseTarget] =
+  const [editing, setEditing] = useState<OwnerWithdrawal | null>(null);
+  const [deleteTarget, setDeleteTarget] =
     useState<OwnerWithdrawal | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useOwnerWithdrawals({
@@ -40,12 +46,32 @@ export function OwnerWithdrawalsPage() {
   });
 
   const createMutation = useCreateOwnerWithdrawal();
+  const updateMutation = useUpdateOwnerWithdrawal();
+  const deleteMutation = useDeleteOwnerWithdrawal();
+  const isSubmitting =
+    createMutation.isPending || updateMutation.isPending;
+
+  const handleCreate = () => {
+    setEditing(null);
+    setFormOpen(true);
+  };
+
+  const handleEdit = (w: OwnerWithdrawal) => {
+    setEditing(w);
+    setFormOpen(true);
+  };
 
   const handleFormSubmit = async (input: CreateOwnerWithdrawalInput) => {
     try {
-      await createMutation.mutateAsync(input);
-      toast({ title: 'تم تسجيل السحب' });
+      if (editing) {
+        await updateMutation.mutateAsync({ id: editing.id, input });
+        toast({ title: 'تم التحديث' });
+      } else {
+        await createMutation.mutateAsync(input);
+        toast({ title: 'تم تسجيل السحب' });
+      }
       setFormOpen(false);
+      setEditing(null);
     } catch (err) {
       toast({
         variant: 'destructive',
@@ -53,6 +79,34 @@ export function OwnerWithdrawalsPage() {
         description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
       });
     }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      toast({ title: 'تم الحذف' });
+      setDeleteTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل الحذف',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handlePrint = (w: OwnerWithdrawal) => {
+    printHTML(
+      buildWithdrawalReceipt({
+        date: formatDate(w.withdrawalDate),
+        reason: w.reason,
+        amount: formatMoney(w.amount),
+        status: w.status,
+        notes: w.notes,
+      }),
+      'سند سحب',
+    );
   };
 
   const totalPages = data?.meta.totalPages ?? 0;
@@ -63,7 +117,7 @@ export function OwnerWithdrawalsPage() {
         title="سحوبات المالك"
         description="سجل سحوبات المالك من الصندوق"
         actions={
-          <Button onClick={() => setFormOpen(true)}>
+          <Button onClick={handleCreate}>
             <Plus className="me-2 h-4 w-4" />
             سحب جديد
           </Button>
@@ -100,7 +154,9 @@ export function OwnerWithdrawalsPage() {
         <>
           <OwnerWithdrawalsTable
             data={data.data}
-            onReverse={setReverseTarget}
+            onEdit={handleEdit}
+            onDelete={setDeleteTarget}
+            onPrint={handlePrint}
           />
           {totalPages > 1 && (
             <Pagination
@@ -114,15 +170,24 @@ export function OwnerWithdrawalsPage() {
 
       <OwnerWithdrawalFormDialog
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open);
+          if (!open) setEditing(null);
+        }}
         onSubmit={handleFormSubmit}
-        isSubmitting={createMutation.isPending}
+        isSubmitting={isSubmitting}
+        initialData={editing}
       />
 
-      <ReverseOwnerWithdrawalDialog
-        open={!!reverseTarget}
-        onOpenChange={(open) => !open && setReverseTarget(null)}
-        withdrawal={reverseTarget}
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="حذف السحب"
+        description={`سيتم حذف سحب "${deleteTarget?.reason ?? ''}" نهائيًا. هل أنت متأكد؟`}
+        confirmLabel="حذف"
+        variant="destructive"
+        isLoading={deleteMutation.isPending}
       />
     </div>
   );

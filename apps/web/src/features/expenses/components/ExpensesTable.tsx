@@ -1,4 +1,4 @@
-import { MoreHorizontal, RotateCcw, TrendingDown } from 'lucide-react';
+import { MoreHorizontal, Pencil, Printer, Trash2, TrendingDown } from 'lucide-react';
 import type { Expense, ExpenseCategory } from '@prince-net/types';
 import {
   Table,
@@ -24,14 +24,16 @@ interface ExpensesTableProps {
   data: Expense[];
   categories: ExpenseCategory[];
   onEdit: (expense: Expense) => void;
-  onReverse: (expense: Expense) => void;
+  onDelete: (expense: Expense) => void;
+  onPrint: (expense: Expense) => void;
 }
 
 export function ExpensesTable({
   data,
   categories,
   onEdit,
-  onReverse,
+  onDelete,
+  onPrint,
 }: ExpensesTableProps) {
   if (data.length === 0) {
     return (
@@ -90,23 +92,23 @@ export function ExpensesTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => onPrint(expense)}>
+                        <Printer className="me-2 h-4 w-4" />
+                        طباعة
+                      </DropdownMenuItem>
                       {isActive && (
                         <DropdownMenuItem onClick={() => onEdit(expense)}>
+                          <Pencil className="me-2 h-4 w-4" />
                           تعديل
                         </DropdownMenuItem>
                       )}
                       {isActive && (
                         <DropdownMenuItem
-                          onClick={() => onReverse(expense)}
                           className="text-destructive"
+                          onClick={() => onDelete(expense)}
                         >
-                          <RotateCcw className="me-2 h-4 w-4" />
-                          عكس
-                        </DropdownMenuItem>
-                      )}
-                      {!isActive && (
-                        <DropdownMenuItem disabled>
-                          لا توجد إجراءات
+                          <Trash2 className="me-2 h-4 w-4" />
+                          حذف
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>

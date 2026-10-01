@@ -1,4 +1,4 @@
-import { CreditCard, RotateCcw } from 'lucide-react';
+import { CreditCard, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import type { Payment } from '@prince-net/types';
 import {
   Table,
@@ -10,6 +10,12 @@ import {
 } from '../../../components/ui/table';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../../../components/ui/dropdown-menu';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { Pagination } from '../../../components/ui/pagination';
 import { formatMoney } from '../../../lib/currency';
@@ -20,7 +26,8 @@ interface PaymentsTableProps {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  onReverse: (payment: Payment) => void;
+  onEdit: (payment: Payment) => void;
+  onDelete: (payment: Payment) => void;
 }
 
 export function PaymentsTable({
@@ -28,7 +35,8 @@ export function PaymentsTable({
   page,
   totalPages,
   onPageChange,
-  onReverse,
+  onEdit,
+  onDelete,
 }: PaymentsTableProps) {
   if (data.length === 0) {
     return (
@@ -50,7 +58,7 @@ export function PaymentsTable({
             <TableHead>المبلغ</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead>ملاحظات</TableHead>
-            <TableHead className="w-24"></TableHead>
+            <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -71,21 +79,30 @@ export function PaymentsTable({
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground max-w-[240px] truncate">
-                  {payment.reversalReason
-                    ? `معكوسة: ${payment.reversalReason}`
-                    : (payment.notes ?? '—')}
+                  {payment.notes ?? '—'}
                 </TableCell>
                 <TableCell>
                   {isActive && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onReverse(payment)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <RotateCcw className="me-1 h-3.5 w-3.5" />
-                      عكس
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onEdit(payment)}>
+                          <Pencil className="me-2 h-4 w-4" />
+                          تعديل
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => onDelete(payment)}
+                        >
+                          <Trash2 className="me-2 h-4 w-4" />
+                          حذف
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
                 </TableCell>
               </TableRow>

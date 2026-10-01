@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowRight, Pencil, Plus } from 'lucide-react';
-import type { CreateLineInput } from '@prince-net/validation';
+import type { CreateLineInput, UpdateLinePaymentInput } from '@prince-net/validation';
 import type { LinePayment } from '@prince-net/types';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/button';
@@ -24,9 +24,11 @@ import {
 } from '../hooks/useLineStatus';
 import { LineFormDialog } from '../components/LineFormDialog';
 import { useLinePayments } from '../../line-payments/hooks/useLinePayments';
+import { useUpdateLinePayment } from '../../line-payments/hooks/useUpdateLinePayment';
+import { useDeleteLinePayment } from '../../line-payments/hooks/useDeleteLinePayment';
 import { LinePaymentsTable } from '../../line-payments/components/LinePaymentsTable';
 import { CreateLinePaymentDialog } from '../../line-payments/components/CreateLinePaymentDialog';
-import { ReverseLinePaymentDialog } from '../../line-payments/components/ReverseLinePaymentDialog';
+import { EditLinePaymentDialog } from '../../line-payments/components/EditLinePaymentDialog';
 import { formatMoney } from '../../../lib/currency';
 import { formatDate } from '../../../lib/format';
 import { ApiClientError } from '../../../lib/api-client';
@@ -41,12 +43,17 @@ export function LineDetailsPage() {
   const [toggleTarget, setToggleTarget] = useState<boolean | null>(null);
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [createPaymentOpen, setCreatePaymentOpen] = useState(false);
-  const [reverseTarget, setReverseTarget] = useState<LinePayment | null>(null);
+  const [editPaymentTarget, setEditPaymentTarget] =
+    useState<LinePayment | null>(null);
+  const [deletePaymentTarget, setDeletePaymentTarget] =
+    useState<LinePayment | null>(null);
 
   const lineQuery = useLine(id);
   const updateMutation = useUpdateLine();
   const activateMutation = useActivateLine();
   const deactivateMutation = useDeactivateLine();
+  const updatePaymentMutation = useUpdateLinePayment();
+  const deletePaymentMutation = useDeleteLinePayment();
 
   const paymentsQuery = useLinePayments({
     lineId: id,
@@ -106,6 +113,41 @@ export function LineDetailsPage() {
       toast({
         variant: 'destructive',
         title: 'فشل التغيير',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handleEditPayment = async (input: UpdateLinePaymentInput) => {
+    if (!editPaymentTarget) return;
+    try {
+      await updatePaymentMutation.mutateAsync({
+        id: editPaymentTarget.id,
+        input,
+      });
+      toast({ title: 'تم تحديث الدفعة' });
+      setEditPaymentTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل التحديث',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handleDeletePayment = async () => {
+    if (!deletePaymentTarget) return;
+    try {
+      await deletePaymentMutation.mutateAsync({
+        id: deletePaymentTarget.id,
+      });
+      toast({ title: 'تم حذف الدفعة' });
+      setDeletePaymentTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل الحذف',
         description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
       });
     }
@@ -230,7 +272,8 @@ export function LineDetailsPage() {
               page={paymentsPage}
               totalPages={paymentsQuery.data?.meta.totalPages ?? 0}
               onPageChange={setPaymentsPage}
-              onReverse={setReverseTarget}
+              onEdit={setEditPaymentTarget}
+              onDelete={setDeletePaymentTarget}
             />
           )}
         </CardContent>
@@ -266,11 +309,24 @@ export function LineDetailsPage() {
         lineId={line.id}
       />
 
-      <ReverseLinePaymentDialog
-        open={!!reverseTarget}
-        onOpenChange={(open) => !open && setReverseTarget(null)}
-        payment={reverseTarget}
+      <EditLinePaymentDialog
+        open={!!editPaymentTarget}
+        onOpenChange={(open) => !open && setEditPaymentTarget(null)}
+        payment={editPaymentTarget}
         lineId={line.id}
+        onSubmit={handleEditPayment}
+        isSubmitting={updatePaymentMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={!!deletePaymentTarget}
+        onOpenChange={(open) => !open && setDeletePaymentTarget(null)}
+        onConfirm={handleDeletePayment}
+        title="حذف الدفعة"
+        description="سيتم حذف الدفعة نهائيًا. هل أنت متأكد؟"
+        confirmLabel="حذف"
+        variant="destructive"
+        isLoading={deletePaymentMutation.isPending}
       />
     </div>
   );

@@ -11,7 +11,7 @@ import {
   ShoppingCart,
   Users,
 } from 'lucide-react';
-import type { CancelSaleInput } from '@prince-net/validation';
+import type { CancelSaleInput, UpdatePaymentInput } from '@prince-net/validation';
 import type { Payment } from '@prince-net/types';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/button';
@@ -24,6 +24,7 @@ import {
 } from '../../../components/ui/card';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
+import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { StatCard } from '../../dashboard/components/StatCard';
 import {
   Table,
@@ -39,9 +40,12 @@ import { useCancelSale } from '../hooks/useCancelSale';
 import { CancelSaleDialog } from '../components/CancelSaleDialog';
 import { EditSaleDialog } from '../components/EditSaleDialog';
 import { usePayments } from '../../payments/hooks/usePayments';
+import { useUpdatePayment } from '../../payments/hooks/useUpdatePayment';
+import { useDeletePayment } from '../../payments/hooks/useDeletePayment';
 import { PaymentsTable } from '../../payments/components/PaymentsTable';
 import { CreatePaymentDialog } from '../../payments/components/CreatePaymentDialog';
-import { ReversePaymentDialog } from '../../payments/components/ReversePaymentDialog';
+import { EditPaymentDialog } from '../../payments/components/EditPaymentDialog';
+import { printHTML, buildSaleReceipt } from '../../../lib/print';
 import { formatMoney } from '../../../lib/currency';
 import { formatDateTime } from '../../../lib/format';
 import { ApiClientError } from '../../../lib/api-client';
@@ -56,10 +60,15 @@ export function SaleDetailsPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [createPaymentOpen, setCreatePaymentOpen] = useState(false);
-  const [reverseTarget, setReverseTarget] = useState<Payment | null>(null);
+  const [editPaymentTarget, setEditPaymentTarget] =
+    useState<Payment | null>(null);
+  const [deletePaymentTarget, setDeletePaymentTarget] =
+    useState<Payment | null>(null);
 
   const saleQuery = useSale(id);
   const cancelMutation = useCancelSale();
+  const updatePaymentMutation = useUpdatePayment();
+  const deletePaymentMutation = useDeletePayment();
 
   const paymentsQuery = usePayments({
     saleId: id,
@@ -105,6 +114,63 @@ export function SaleDetailsPage() {
     }
   };
 
+  const handleEditPayment = async (input: UpdatePaymentInput) => {
+    if (!editPaymentTarget) return;
+    try {
+      await updatePaymentMutation.mutateAsync({
+        id: editPaymentTarget.id,
+        input,
+      });
+      toast({ title: 'تم تحديث الدفعة' });
+      setEditPaymentTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل التحديث',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handleDeletePayment = async () => {
+    if (!deletePaymentTarget) return;
+    try {
+      await deletePaymentMutation.mutateAsync({
+        id: deletePaymentTarget.id,
+      });
+      toast({ title: 'تم حذف الدفعة' });
+      setDeletePaymentTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل الحذف',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handlePrint = () => {
+    printHTML(
+      buildSaleReceipt({
+        invoiceNumber: sale.invoiceNumber,
+        date: formatDateTime(sale.saleDate),
+        distributorName: sale.distributorName ?? '—',
+        status: sale.status,
+        items: sale.items.map((item) => ({
+          packageNameSnapshot: item.packageNameSnapshot,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice,
+        })),
+        totalAmount: sale.totalAmount,
+        paidAmount: sale.paidAmount,
+        remainingAmount: sale.remainingAmount,
+        notes: sale.notes,
+      }),
+      `فاتورة ${sale.invoiceNumber}`,
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -120,7 +186,7 @@ export function SaleDetailsPage() {
           description={formatDateTime(sale.saleDate)}
           actions={
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => window.print()}>
+              <Button variant="outline" onClick={handlePrint}>
                 <Printer className="me-2 h-4 w-4" />
                 طباعة
               </Button>
@@ -275,7 +341,8 @@ export function SaleDetailsPage() {
               page={paymentsPage}
               totalPages={paymentsQuery.data?.meta.totalPages ?? 0}
               onPageChange={setPaymentsPage}
-              onReverse={setReverseTarget}
+              onEdit={setEditPaymentTarget}
+              onDelete={setDeletePaymentTarget}
             />
           )}
         </CardContent>
@@ -317,11 +384,23 @@ export function SaleDetailsPage() {
         remainingAmount={sale.remainingAmount}
       />
 
-      <ReversePaymentDialog
-        open={!!reverseTarget}
-        onOpenChange={(open) => !open && setReverseTarget(null)}
-        payment={reverseTarget}
-        saleId={sale.id}
+      <EditPaymentDialog
+        open={!!editPaymentTarget}
+        onOpenChange={(open) => !open && setEditPaymentTarget(null)}
+        payment={editPaymentTarget}
+        onSubmit={handleEditPayment}
+        isSubmitting={updatePaymentMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={!!deletePaymentTarget}
+        onOpenChange={(open) => !open && setDeletePaymentTarget(null)}
+        onConfirm={handleDeletePayment}
+        title="حذف الدفعة"
+        description="سيتم حذف الدفعة نهائيًا. هل أنت متأكد؟"
+        confirmLabel="حذف"
+        variant="destructive"
+        isLoading={deletePaymentMutation.isPending}
       />
     </div>
   );

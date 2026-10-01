@@ -5,6 +5,7 @@ import {
   createOwnerWithdrawalSchema,
   type CreateOwnerWithdrawalInput,
 } from '@prince-net/validation';
+import type { OwnerWithdrawal } from '@prince-net/types';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ interface OwnerWithdrawalFormDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: CreateOwnerWithdrawalInput) => Promise<void>;
   isSubmitting: boolean;
+  initialData?: OwnerWithdrawal | null;
 }
 
 export function OwnerWithdrawalFormDialog({
@@ -31,7 +33,10 @@ export function OwnerWithdrawalFormDialog({
   onOpenChange,
   onSubmit,
   isSubmitting,
+  initialData,
 }: OwnerWithdrawalFormDialogProps) {
+  const isEdit = !!initialData;
+
   const {
     register,
     handleSubmit,
@@ -50,14 +55,25 @@ export function OwnerWithdrawalFormDialog({
 
   useEffect(() => {
     if (open) {
-      reset({
-        amount: '',
-        reason: '',
-        withdrawalDate: new Date(),
-        notes: '',
-      });
+      if (initialData) {
+        reset({
+          amount: initialData.amount,
+          reason: initialData.reason,
+          withdrawalDate: initialData.withdrawalDate
+            ? new Date(initialData.withdrawalDate)
+            : new Date(),
+          notes: initialData.notes ?? '',
+        });
+      } else {
+        reset({
+          amount: '',
+          reason: '',
+          withdrawalDate: new Date(),
+          notes: '',
+        });
+      }
     }
-  }, [open, reset]);
+  }, [open, initialData, reset]);
 
   const handleFormSubmit = async (data: CreateOwnerWithdrawalInput) => {
     const cleaned: CreateOwnerWithdrawalInput = {
@@ -75,9 +91,9 @@ export function OwnerWithdrawalFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>سحب جديد</DialogTitle>
+          <DialogTitle>{isEdit ? 'تعديل السحب' : 'سحب جديد'}</DialogTitle>
           <DialogDescription>
-            سجّل عملية سحب من الصندوق
+            {isEdit ? 'عدّل بيانات السحب' : 'سجّل عملية سحب من الصندوق'}
           </DialogDescription>
         </DialogHeader>
 
@@ -160,7 +176,11 @@ export function OwnerWithdrawalFormDialog({
             form="owner-withdrawal-form"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'جارٍ الحفظ...' : 'سحب'}
+            {isSubmitting
+              ? 'جارٍ الحفظ...'
+              : isEdit
+                ? 'حفظ التعديلات'
+                : 'سحب'}
           </Button>
         </DialogFooter>
       </DialogContent>
