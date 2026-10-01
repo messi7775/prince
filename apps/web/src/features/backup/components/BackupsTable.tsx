@@ -53,7 +53,7 @@ export function BackupsTable({ data, onRestore }: BackupsTableProps) {
               <TableCell className="text-sm font-medium">
                 <div className="flex items-center gap-2">
                   <Database className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="truncate max-w-[280px]">
+                  <span className="sm:truncate sm:max-w-[280px] break-words">
                     {backup.fileName}
                   </span>
                 </div>

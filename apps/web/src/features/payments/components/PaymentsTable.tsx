@@ -67,7 +67,7 @@ export function PaymentsTable({
 
             return (
               <TableRow key={payment.id}>
-                <TableCell className="text-sm whitespace-nowrap">
+                <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
                   {formatDateTime(payment.paymentDate)}
                 </TableCell>
                 <TableCell className="num font-medium">

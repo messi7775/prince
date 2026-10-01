@@ -159,6 +159,17 @@
   table {
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* Smooth momentum scrolling for horizontal table scroll */
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  /* Thinner scrollbars on mobile table containers */
+  .overflow-x-auto::-webkit-scrollbar {
+    height: 4px;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════

@@ -61,7 +61,7 @@ export function MovementsTable({ data }: MovementsTableProps) {
         <TableBody>
           {data.map((mv) => (
             <TableRow key={mv.id}>
-              <TableCell className="text-sm whitespace-nowrap">
+              <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
                 {formatDateTime(mv.createdAt)}
               </TableCell>
               <TableCell>

@@ -67,7 +67,7 @@ export function ExpensesTable({
 
             return (
               <TableRow key={expense.id}>
-                <TableCell className="text-sm whitespace-nowrap">
+                <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
                   {formatDate(expense.expenseDate)}
                 </TableCell>
                 <TableCell className="text-sm">

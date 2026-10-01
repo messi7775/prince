@@ -118,7 +118,7 @@ export function AuditLogsTable({
           <TableBody>
             {data.map((log) => (
               <TableRow key={log.id}>
-                <TableCell className="text-sm whitespace-nowrap">
+                <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
                   {formatDateTime(log.createdAt)}
                 </TableCell>
                 <TableCell>

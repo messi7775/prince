@@ -62,10 +62,10 @@ export function OwnerWithdrawalsTable({
 
             return (
               <TableRow key={w.id}>
-                <TableCell className="text-sm whitespace-nowrap">
+                <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
                   {formatDate(w.withdrawalDate)}
                 </TableCell>
-                <TableCell className="font-medium max-w-[240px] truncate">
+                <TableCell className="font-medium sm:max-w-[240px] sm:truncate break-words">
                   {w.reason}
                 </TableCell>
                 <TableCell className="num font-medium">

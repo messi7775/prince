@@ -70,7 +70,7 @@ export function CashMovementsTable({
 
               return (
                 <TableRow key={mv.id}>
-                  <TableCell className="text-sm whitespace-nowrap">
+                  <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
                     {formatDateTime(mv.movementDate)}
                   </TableCell>
                   <TableCell>
