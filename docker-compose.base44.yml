@@ -43,7 +43,7 @@ services:
       - CORS_ORIGIN=http://localhost:5173
       - BACKUP_DIR=/tmp/prince-net-backups
       - CHOKIDAR_USEPOLLING=true
-    command: ["sh", "-ec", "npm install -g pnpm@11.28.0 && mkdir -p /tmp/prince-net-backups && cd apps/api && pnpm prisma:generate && pnpm prisma:deploy && pnpm prisma:seed && exec pnpm dev"]
+    command: ["sh", "-ec", "apt-get update -qq && apt-get install -y -qq --no-install-recommends procps >/dev/null && npm install -g pnpm@11.28.0 && mkdir -p /tmp/prince-net-backups && cd apps/api && pnpm prisma:generate && pnpm prisma:deploy && pnpm prisma:seed && exec pnpm dev"]
     depends_on:
       install-deps:
         condition: service_completed_successfully
