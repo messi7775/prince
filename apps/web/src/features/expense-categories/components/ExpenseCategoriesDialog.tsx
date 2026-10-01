@@ -1,8 +1,14 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Tags } from 'lucide-react';
 import type { ExpenseCategory } from '@prince-net/types';
 import type { CreateExpenseCategoryInput } from '@prince-net/validation';
-import { PageHeader } from '../../../components/layout/PageHeader';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '../../../components/ui/dialog';
 import { Button } from '../../../components/ui/button';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
@@ -14,11 +20,19 @@ import { useUpdateExpenseCategory } from '../hooks/useUpdateExpenseCategory';
 import { useDeleteExpenseCategory } from '../hooks/useDeleteExpenseCategory';
 import { useActivateExpenseCategory } from '../hooks/useActivateExpenseCategory';
 import { useDeactivateExpenseCategory } from '../hooks/useDeactivateExpenseCategory';
-import { ExpenseCategoriesTable } from '../components/ExpenseCategoriesTable';
-import { ExpenseCategoryFormDialog } from '../components/ExpenseCategoryFormDialog';
+import { ExpenseCategoriesTable } from './ExpenseCategoriesTable';
+import { ExpenseCategoryFormDialog } from './ExpenseCategoryFormDialog';
 import { ApiClientError } from '../../../lib/api-client';
 
-export function ExpenseCategoriesPage() {
+interface ExpenseCategoriesDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function ExpenseCategoriesDialog({
+  open,
+  onOpenChange,
+}: ExpenseCategoriesDialogProps) {
   const { toast } = useToast();
 
   const [formOpen, setFormOpen] = useState(false);
@@ -109,35 +123,43 @@ export function ExpenseCategoriesPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="تصنيفات المصروفات"
-        description="إدارة تصنيفات المصروفات"
-        actions={
-          <Button onClick={handleCreate}>
-            <Plus className="me-2 h-4 w-4" />
-            تصنيف جديد
-          </Button>
-        }
-      />
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Tags className="h-5 w-5" />
+              تصنيفات المصروفات
+            </DialogTitle>
+            <DialogDescription>إدارة تصنيفات المصروفات</DialogDescription>
+          </DialogHeader>
 
-      {isLoading ? (
-        <LoadingState />
-      ) : isError || !data ? (
-        <ErrorState
-          title="تعذّر تحميل التصنيفات"
-          message={error instanceof Error ? error.message : 'حدث خطأ'}
-          onRetry={() => refetch()}
-        />
-      ) : (
-        <ExpenseCategoriesTable
-          data={data}
-          onEdit={handleEdit}
-          onDelete={setDeleteTarget}
-          onToggleStatus={setToggleTarget}
-          isUpdating={isStatusUpdating}
-        />
-      )}
+          <div className="flex justify-end">
+            <Button size="sm" onClick={handleCreate}>
+              <Plus className="me-2 h-4 w-4" />
+              تصنيف جديد
+            </Button>
+          </div>
+
+          {isLoading ? (
+            <LoadingState />
+          ) : isError || !data ? (
+            <ErrorState
+              title="تعذّر تحميل التصنيفات"
+              message={error instanceof Error ? error.message : 'حدث خطأ'}
+              onRetry={() => refetch()}
+            />
+          ) : (
+            <ExpenseCategoriesTable
+              data={data}
+              onEdit={handleEdit}
+              onDelete={setDeleteTarget}
+              onToggleStatus={setToggleTarget}
+              isUpdating={isStatusUpdating}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       <ExpenseCategoryFormDialog
         open={formOpen}
@@ -165,9 +187,7 @@ export function ExpenseCategoriesPage() {
         open={!!toggleTarget}
         onOpenChange={(open) => !open && setToggleTarget(null)}
         onConfirm={handleToggleStatus}
-        title={
-          toggleTarget?.isActive ? 'تعطيل التصنيف' : 'تفعيل التصنيف'
-        }
+        title={toggleTarget?.isActive ? 'تعطيل التصنيف' : 'تفعيل التصنيف'}
         description={
           toggleTarget?.isActive
             ? `سيتم تعطيل "${toggleTarget.name}" — لن يظهر عند إنشاء مصروفات جديدة.`
@@ -177,6 +197,6 @@ export function ExpenseCategoriesPage() {
         variant={toggleTarget?.isActive ? 'destructive' : 'default'}
         isLoading={isStatusUpdating}
       />
-    </div>
+    </>
   );
 }

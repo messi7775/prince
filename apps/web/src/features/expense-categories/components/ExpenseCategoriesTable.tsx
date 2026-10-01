@@ -21,6 +21,7 @@ import { EmptyState } from '../../../components/ui/empty-state';
 interface ExpenseCategoriesTableProps {
   data: ExpenseCategory[];
   onEdit: (category: ExpenseCategory) => void;
+  onDelete: (category: ExpenseCategory) => void;
   onToggleStatus: (category: ExpenseCategory) => void;
   isUpdating: boolean;
 }
@@ -28,6 +29,7 @@ interface ExpenseCategoriesTableProps {
 export function ExpenseCategoriesTable({
   data,
   onEdit,
+  onDelete,
   onToggleStatus,
   isUpdating,
 }: ExpenseCategoriesTableProps) {
@@ -90,6 +92,12 @@ export function ExpenseCategoriesTable({
                       }
                     >
                       {category.isActive ? 'تعطيل' : 'تفعيل'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onDelete(category)}
+                      className="text-destructive"
+                    >
+                      حذف
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

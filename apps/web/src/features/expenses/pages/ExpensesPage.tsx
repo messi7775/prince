@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Tags } from 'lucide-react';
 import type { Expense } from '@prince-net/types';
 import type { CreateExpenseInput } from '@prince-net/validation';
 import { PageHeader } from '../../../components/layout/PageHeader';
@@ -10,6 +10,7 @@ import { Pagination } from '../../../components/ui/pagination';
 import { useToast } from '../../../components/ui/use-toast';
 import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { useExpenseCategories } from '../../expense-categories/hooks/useExpenseCategories';
+import { ExpenseCategoriesDialog } from '../../expense-categories/components/ExpenseCategoriesDialog';
 import { useExpenses } from '../hooks/useExpenses';
 import { useCreateExpense } from '../hooks/useCreateExpense';
 import { useUpdateExpense } from '../hooks/useUpdateExpense';
@@ -35,6 +36,7 @@ export function ExpensesPage() {
   const [dateTo, setDateTo] = useState('');
 
   const [formOpen, setFormOpen] = useState(false);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Expense | null>(null);
 
@@ -124,10 +126,16 @@ export function ExpensesPage() {
         title="المصروفات"
         description="إدارة مصروفات الشبكة"
         actions={
-          <Button onClick={handleCreate}>
-            <Plus className="me-2 h-4 w-4" />
-            مصروف جديد
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setCategoriesOpen(true)}>
+              <Tags className="me-2 h-4 w-4" />
+              التصنيفات
+            </Button>
+            <Button onClick={handleCreate}>
+              <Plus className="me-2 h-4 w-4" />
+              مصروف جديد
+            </Button>
+          </div>
         }
       />
 
@@ -201,6 +209,11 @@ export function ExpensesPage() {
         confirmLabel="حذف"
         variant="destructive"
         isLoading={deleteMutation.isPending}
+      />
+
+      <ExpenseCategoriesDialog
+        open={categoriesOpen}
+        onOpenChange={setCategoriesOpen}
       />
     </div>
   );
