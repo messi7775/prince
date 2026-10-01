@@ -9,19 +9,19 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 
-interface PackagesFiltersProps {
+interface DistributorsFiltersProps {
   search: string;
   onSearchChange: (value: string) => void;
-  status: 'ACTIVE' | 'INACTIVE' | 'ALL';
-  onStatusChange: (value: 'ACTIVE' | 'INACTIVE' | 'ALL') => void;
+  status: 'ALL' | 'ACTIVE' | 'INACTIVE';
+  onStatusChange: (value: 'ALL' | 'ACTIVE' | 'INACTIVE') => void;
 }
 
-export function PackagesFilters({
+export function DistributorsFilters({
   search,
   onSearchChange,
   status,
   onStatusChange,
-}: PackagesFiltersProps) {
+}: DistributorsFiltersProps) {
   return (
     <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
       {/* Search */}
@@ -30,7 +30,7 @@ export function PackagesFilters({
         <div className="relative">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="ابحث باسم الباقة..."
+            placeholder="ابحث بالاسم أو الهاتف..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             className="ps-9"
@@ -44,7 +44,7 @@ export function PackagesFilters({
         <Select
           value={status}
           onValueChange={(v) =>
-            onStatusChange(v as 'ACTIVE' | 'INACTIVE' | 'ALL')
+            onStatusChange(v as 'ALL' | 'ACTIVE' | 'INACTIVE')
           }
         >
           <SelectTrigger>
@@ -52,8 +52,8 @@ export function PackagesFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">الكل</SelectItem>
-            <SelectItem value="ACTIVE">مفعّلة</SelectItem>
-            <SelectItem value="INACTIVE">معطّلة</SelectItem>
+            <SelectItem value="ACTIVE">مفعّل</SelectItem>
+            <SelectItem value="INACTIVE">معطّل</SelectItem>
           </SelectContent>
         </Select>
       </div>

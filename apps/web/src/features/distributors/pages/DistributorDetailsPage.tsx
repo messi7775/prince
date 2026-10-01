@@ -382,7 +382,7 @@ export function DistributorDetailsPage() {
                   <TableBody>
                     {paymentsQuery.data.data.map((p) => (
                       <TableRow key={p.id}>
-                        <TableCell className="text-sm whitespace-nowrap">
+                        <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
                           {formatDateTime(p.paymentDate)}
                         </TableCell>
                         <TableCell className="num font-medium">

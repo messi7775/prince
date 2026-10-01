@@ -1,20 +1,12 @@
 import { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { Distributor } from '@prince-net/types';
 import type { CreateDistributorInput } from '@prince-net/validation';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Pagination } from '../../../components/ui/pagination';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../../components/ui/select';
 import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { useToast } from '../../../components/ui/use-toast';
 import { useDistributors } from '../hooks/useDistributors';
@@ -26,6 +18,7 @@ import {
 } from '../hooks/useDistributorStatus';
 import { DistributorsTable } from '../components/DistributorsTable';
 import { DistributorFormDialog } from '../components/DistributorFormDialog';
+import { DistributorsFilters } from '../components/DistributorsFilters';
 import { ApiClientError } from '../../../lib/api-client';
 
 const PAGE_LIMIT = 25;
@@ -122,36 +115,18 @@ export function DistributorsPage() {
         }
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="ابحث بالاسم أو الهاتف..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="ps-9"
-          />
-        </div>
-        <Select
-          value={status}
-          onValueChange={(v) => {
-            setStatus(v as StatusFilter);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-full sm:w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ALL">الكل</SelectItem>
-            <SelectItem value="ACTIVE">مفعّل</SelectItem>
-            <SelectItem value="INACTIVE">معطّل</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <DistributorsFilters
+        search={search}
+        onSearchChange={(v) => {
+          setSearch(v);
+          setPage(1);
+        }}
+        status={status}
+        onStatusChange={(v) => {
+          setStatus(v);
+          setPage(1);
+        }}
+      />
 
       {isLoading ? (
         <LoadingState />
