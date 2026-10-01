@@ -75,4 +75,30 @@ export class LinesController {
       userAgent: req.get('user-agent'),
     });
   }
+
+  @Post(':id/activate')
+  @HttpCode(HttpStatus.OK)
+  async activate(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.linesService.activate(id, user.userId, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
+
+  @Post(':id/deactivate')
+  @HttpCode(HttpStatus.OK)
+  async deactivate(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.linesService.deactivate(id, user.userId, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
 }

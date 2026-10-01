@@ -15,10 +15,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
+import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { useToast } from '../../../components/ui/use-toast';
 import { useDistributors } from '../hooks/useDistributors';
 import { useCreateDistributor } from '../hooks/useCreateDistributor';
 import { useUpdateDistributor } from '../hooks/useUpdateDistributor';
+import {
+  useActivateDistributor,
+  useDeactivateDistributor,
+} from '../hooks/useDistributorStatus';
 import { DistributorsTable } from '../components/DistributorsTable';
 import { DistributorFormDialog } from '../components/DistributorFormDialog';
 import { ApiClientError } from '../../../lib/api-client';
@@ -35,6 +40,7 @@ export function DistributorsPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Distributor | null>(null);
+  const [toggleTarget, setToggleTarget] = useState<Distributor | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useDistributors({
     page,
@@ -45,7 +51,11 @@ export function DistributorsPage() {
 
   const createMutation = useCreateDistributor();
   const updateMutation = useUpdateDistributor();
+  const activateMutation = useActivateDistributor();
+  const deactivateMutation = useDeactivateDistributor();
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
+  const isStatusUpdating =
+    activateMutation.isPending || deactivateMutation.isPending;
 
   const handleCreate = () => {
     setEditing(null);
@@ -61,10 +71,10 @@ export function DistributorsPage() {
     try {
       if (editing) {
         await updateMutation.mutateAsync({ id: editing.id, input });
-        toast({ title: 'تم التحديث' });
+        toast({ title: 'تم التحديث', description: 'تم تحديث بيانات الموزع' });
       } else {
         await createMutation.mutateAsync(input);
-        toast({ title: 'تمت الإضافة' });
+        toast({ title: 'تمت الإضافة', description: 'تمت إضافة الموزع بنجاح' });
       }
       setFormOpen(false);
       setEditing(null);
@@ -72,6 +82,26 @@ export function DistributorsPage() {
       toast({
         variant: 'destructive',
         title: 'فشل الحفظ',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!toggleTarget) return;
+    try {
+      if (toggleTarget.status === 'ACTIVE') {
+        await deactivateMutation.mutateAsync(toggleTarget.id);
+        toast({ title: 'تم التعطيل' });
+      } else {
+        await activateMutation.mutateAsync(toggleTarget.id);
+        toast({ title: 'تم التفعيل' });
+      }
+      setToggleTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل التغيير',
         description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
       });
     }
@@ -133,7 +163,12 @@ export function DistributorsPage() {
         />
       ) : (
         <>
-          <DistributorsTable data={data.data} onEdit={handleEdit} />
+          <DistributorsTable
+            data={data.data}
+            onEdit={handleEdit}
+            onToggleStatus={setToggleTarget}
+            isUpdating={isStatusUpdating}
+          />
           {totalPages > 1 && (
             <Pagination
               page={page}
@@ -153,6 +188,27 @@ export function DistributorsPage() {
         onSubmit={handleFormSubmit}
         initialData={editing}
         isSubmitting={isSubmitting}
+      />
+
+      <ConfirmDialog
+        open={!!toggleTarget}
+        onOpenChange={(open) => !open && setToggleTarget(null)}
+        onConfirm={handleToggleStatus}
+        title={
+          toggleTarget?.status === 'ACTIVE'
+            ? 'تعطيل الموزع'
+            : 'تفعيل الموزع'
+        }
+        description={
+          toggleTarget?.status === 'ACTIVE'
+            ? `سيتم تعطيل "${toggleTarget.name}" — لن يمكن إنشاء مبيعات جديدة له.`
+            : `سيتم تفعيل "${toggleTarget?.name}".`
+        }
+        confirmLabel={
+          toggleTarget?.status === 'ACTIVE' ? 'تعطيل' : 'تفعيل'
+        }
+        variant={toggleTarget?.status === 'ACTIVE' ? 'destructive' : 'default'}
+        isLoading={isStatusUpdating}
       />
     </div>
   );

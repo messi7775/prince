@@ -5,10 +5,14 @@ import type {
   UpdateExpenseCategoryInput,
 } from '@prince-net/validation';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class ExpenseCategoriesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   async list(): Promise<ExpenseCategory[]> {
     const rows = await this.prisma.expenseCategory.findMany({
@@ -47,6 +51,8 @@ export class ExpenseCategoriesService {
 
   async create(
     input: CreateExpenseCategoryInput,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
   ): Promise<ExpenseCategory> {
     const row = await this.prisma.expenseCategory.create({
       data: {
@@ -56,19 +62,24 @@ export class ExpenseCategoriesService {
       },
     });
 
-    return {
-      id: row.id,
-      name: row.name,
-      description: row.description,
-      isActive: row.isActive,
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-    };
+    await this.auditService.log({
+      userId,
+      action: 'EXPENSE_CATEGORY_CREATED',
+      entityType: 'ExpenseCategory',
+      entityId: row.id,
+      newValues: { name: row.name, description: row.description },
+      ipAddress: req.ip ?? null,
+      userAgent: req.userAgent ?? null,
+    });
+
+    return this.toDto(row);
   }
 
   async update(
     id: string,
     input: UpdateExpenseCategoryInput,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
   ): Promise<ExpenseCategory> {
     const existing = await this.prisma.expenseCategory.findUnique({
       where: { id },
@@ -78,6 +89,21 @@ export class ExpenseCategoriesService {
         message: 'تصنيف المصروف غير موجود',
         code: 'EXPENSE_CATEGORY_NOT_FOUND',
       });
+    }
+
+    const oldValues: Record<string, unknown> = {};
+    const newValues: Record<string, unknown> = {};
+
+    if (input.name !== undefined && input.name !== existing.name) {
+      oldValues.name = existing.name;
+      newValues.name = input.name;
+    }
+    if (
+      input.description !== undefined &&
+      input.description !== existing.description
+    ) {
+      oldValues.description = existing.description;
+      newValues.description = input.description;
     }
 
     const row = await this.prisma.expenseCategory.update({
@@ -90,27 +116,44 @@ export class ExpenseCategoriesService {
       },
     });
 
-    return {
-      id: row.id,
-      name: row.name,
-      description: row.description,
-      isActive: row.isActive,
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-    };
+    if (Object.keys(newValues).length > 0) {
+      await this.auditService.log({
+        userId,
+        action: 'EXPENSE_CATEGORY_UPDATED',
+        entityType: 'ExpenseCategory',
+        entityId: id,
+        oldValues: Object.keys(oldValues).length > 0 ? oldValues : null,
+        newValues,
+        ipAddress: req.ip ?? null,
+        userAgent: req.userAgent ?? null,
+      });
+    }
+
+    return this.toDto(row);
   }
 
-  async activate(id: string): Promise<ExpenseCategory> {
-    return this.setActive(id, true);
+  async activate(
+    id: string,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<ExpenseCategory> {
+    return this.setActive(id, true, userId, req, 'EXPENSE_CATEGORY_ACTIVATED');
   }
 
-  async deactivate(id: string): Promise<ExpenseCategory> {
-    return this.setActive(id, false);
+  async deactivate(
+    id: string,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<ExpenseCategory> {
+    return this.setActive(id, false, userId, req, 'EXPENSE_CATEGORY_DEACTIVATED');
   }
 
   private async setActive(
     id: string,
     isActive: boolean,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+    action: 'EXPENSE_CATEGORY_ACTIVATED' | 'EXPENSE_CATEGORY_DEACTIVATED',
   ): Promise<ExpenseCategory> {
     const existing = await this.prisma.expenseCategory.findUnique({
       where: { id },
@@ -123,14 +166,7 @@ export class ExpenseCategoriesService {
     }
 
     if (existing.isActive === isActive) {
-      return {
-        id: existing.id,
-        name: existing.name,
-        description: existing.description,
-        isActive: existing.isActive,
-        createdAt: existing.createdAt.toISOString(),
-        updatedAt: existing.updatedAt.toISOString(),
-      };
+      return this.toDto(existing);
     }
 
     const row = await this.prisma.expenseCategory.update({
@@ -138,6 +174,28 @@ export class ExpenseCategoriesService {
       data: { isActive },
     });
 
+    await this.auditService.log({
+      userId,
+      action,
+      entityType: 'ExpenseCategory',
+      entityId: id,
+      oldValues: { isActive: existing.isActive },
+      newValues: { isActive },
+      ipAddress: req.ip ?? null,
+      userAgent: req.userAgent ?? null,
+    });
+
+    return this.toDto(row);
+  }
+
+  private toDto(row: {
+    id: string;
+    name: string;
+    description: string | null;
+    isActive: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }): ExpenseCategory {
     return {
       id: row.id,
       name: row.name,

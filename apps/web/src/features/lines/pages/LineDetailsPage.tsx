@@ -14,9 +14,14 @@ import {
 } from '../../../components/ui/card';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
+import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { useToast } from '../../../components/ui/use-toast';
 import { useLine } from '../hooks/useLine';
 import { useUpdateLine } from '../hooks/useUpdateLine';
+import {
+  useActivateLine,
+  useDeactivateLine,
+} from '../hooks/useLineStatus';
 import { LineFormDialog } from '../components/LineFormDialog';
 import { useLinePayments } from '../../line-payments/hooks/useLinePayments';
 import { LinePaymentsTable } from '../../line-payments/components/LinePaymentsTable';
@@ -33,12 +38,15 @@ export function LineDetailsPage() {
   const { toast } = useToast();
 
   const [editOpen, setEditOpen] = useState(false);
+  const [toggleTarget, setToggleTarget] = useState<boolean | null>(null);
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [createPaymentOpen, setCreatePaymentOpen] = useState(false);
   const [reverseTarget, setReverseTarget] = useState<LinePayment | null>(null);
 
   const lineQuery = useLine(id);
   const updateMutation = useUpdateLine();
+  const activateMutation = useActivateLine();
+  const deactivateMutation = useDeactivateLine();
 
   const paymentsQuery = useLinePayments({
     lineId: id,
@@ -66,6 +74,8 @@ export function LineDetailsPage() {
   }
 
   const line = lineQuery.data;
+  const isStatusUpdating =
+    activateMutation.isPending || deactivateMutation.isPending;
 
   const handleUpdate = async (input: CreateLineInput) => {
     try {
@@ -76,6 +86,26 @@ export function LineDetailsPage() {
       toast({
         variant: 'destructive',
         title: 'فشل التحديث',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (toggleTarget === null) return;
+    try {
+      if (toggleTarget) {
+        await deactivateMutation.mutateAsync(line.id);
+        toast({ title: 'تم التعطيل' });
+      } else {
+        await activateMutation.mutateAsync(line.id);
+        toast({ title: 'تم التفعيل' });
+      }
+      setToggleTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل التغيير',
         description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
       });
     }
@@ -95,10 +125,19 @@ export function LineDetailsPage() {
           title={line.name}
           description={line.provider}
           actions={
-            <Button variant="outline" onClick={() => setEditOpen(true)}>
-              <Pencil className="me-2 h-4 w-4" />
-              تعديل
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditOpen(true)}>
+                <Pencil className="me-2 h-4 w-4" />
+                تعديل
+              </Button>
+              <Button
+                variant={line.status === 'ACTIVE' ? 'destructive' : 'default'}
+                onClick={() => setToggleTarget(line.status === 'ACTIVE')}
+                disabled={isStatusUpdating}
+              >
+                {line.status === 'ACTIVE' ? 'تعطيل' : 'تفعيل'}
+              </Button>
+            </div>
           }
         />
 
@@ -204,6 +243,21 @@ export function LineDetailsPage() {
         onSubmit={handleUpdate}
         initialData={line}
         isSubmitting={updateMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={toggleTarget !== null}
+        onOpenChange={(open) => !open && setToggleTarget(null)}
+        onConfirm={handleToggleStatus}
+        title={toggleTarget ? 'تعطيل الخط' : 'تفعيل الخط'}
+        description={
+          toggleTarget
+            ? `سيتم تعطيل "${line.name}".`
+            : `سيتم تفعيل "${line.name}".`
+        }
+        confirmLabel={toggleTarget ? 'تعطيل' : 'تفعيل'}
+        variant={toggleTarget ? 'destructive' : 'default'}
+        isLoading={isStatusUpdating}
       />
 
       <CreateLinePaymentDialog

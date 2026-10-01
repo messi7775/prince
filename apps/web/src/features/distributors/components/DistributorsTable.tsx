@@ -23,9 +23,16 @@ import { formatDate } from '../../../lib/format';
 interface DistributorsTableProps {
   data: Distributor[];
   onEdit: (d: Distributor) => void;
+  onToggleStatus: (d: Distributor) => void;
+  isUpdating: boolean;
 }
 
-export function DistributorsTable({ data, onEdit }: DistributorsTableProps) {
+export function DistributorsTable({
+  data,
+  onEdit,
+  onToggleStatus,
+  isUpdating,
+}: DistributorsTableProps) {
   if (data.length === 0) {
     return (
       <EmptyState
@@ -73,7 +80,7 @@ export function DistributorsTable({ data, onEdit }: DistributorsTableProps) {
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" disabled={isUpdating}>
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -85,6 +92,16 @@ export function DistributorsTable({ data, onEdit }: DistributorsTableProps) {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onEdit(d)}>
                       تعديل
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onToggleStatus(d)}
+                      className={
+                        d.status === 'ACTIVE'
+                          ? 'text-destructive'
+                          : 'text-green-600'
+                      }
+                    >
+                      {d.status === 'ACTIVE' ? 'تعطيل' : 'تفعيل'}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

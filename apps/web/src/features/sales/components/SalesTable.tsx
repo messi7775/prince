@@ -35,6 +35,7 @@ export function SalesTable({ data }: SalesTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead>رقم الفاتورة</TableHead>
+            <TableHead>الموزع</TableHead>
             <TableHead>التاريخ</TableHead>
             <TableHead>الإجمالي</TableHead>
             <TableHead>الحالة</TableHead>
@@ -50,6 +51,9 @@ export function SalesTable({ data }: SalesTableProps) {
                 >
                   {sale.invoiceNumber}
                 </Link>
+              </TableCell>
+              <TableCell className="text-sm">
+                {sale.distributorName ?? '—'}
               </TableCell>
               <TableCell className="text-sm whitespace-nowrap">
                 {formatDateTime(sale.saleDate)}

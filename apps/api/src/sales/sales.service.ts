@@ -66,11 +66,15 @@ export class SalesService {
         skip,
         take,
         orderBy: { saleDate: order },
+        include: { distributor: { select: { name: true } } },
       }),
       this.prisma.sale.count({ where }),
     ]);
 
-    const data: Sale[] = rows.map((row) => this.toSale(row));
+    const data: Sale[] = rows.map((row) => ({
+      ...this.toSale(row),
+      distributorName: row.distributor.name,
+    }));
     const meta: PaginationMeta = buildPaginationMeta(total, page, limit);
 
     return { success: true, data, meta };

@@ -7,10 +7,15 @@ import { Button } from '../../../components/ui/button';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Pagination } from '../../../components/ui/pagination';
+import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { useToast } from '../../../components/ui/use-toast';
 import { useLines } from '../hooks/useLines';
 import { useCreateLine } from '../hooks/useCreateLine';
 import { useUpdateLine } from '../hooks/useUpdateLine';
+import {
+  useActivateLine,
+  useDeactivateLine,
+} from '../hooks/useLineStatus';
 import { LinesFilters } from '../components/LinesFilters';
 import { LinesTable } from '../components/LinesTable';
 import { LineFormDialog } from '../components/LineFormDialog';
@@ -28,6 +33,7 @@ export function LinesPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Line | null>(null);
+  const [toggleTarget, setToggleTarget] = useState<Line | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useLines({
     page,
@@ -38,7 +44,11 @@ export function LinesPage() {
 
   const createMutation = useCreateLine();
   const updateMutation = useUpdateLine();
+  const activateMutation = useActivateLine();
+  const deactivateMutation = useDeactivateLine();
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
+  const isStatusUpdating =
+    activateMutation.isPending || deactivateMutation.isPending;
 
   const handleCreate = () => {
     setEditing(null);
@@ -54,10 +64,10 @@ export function LinesPage() {
     try {
       if (editing) {
         await updateMutation.mutateAsync({ id: editing.id, input });
-        toast({ title: 'تم التحديث' });
+        toast({ title: 'تم التحديث', description: 'تم تحديث بيانات الخط' });
       } else {
         await createMutation.mutateAsync(input);
-        toast({ title: 'تمت الإضافة' });
+        toast({ title: 'تمت الإضافة', description: 'تمت إضافة الخط بنجاح' });
       }
       setFormOpen(false);
       setEditing(null);
@@ -65,6 +75,26 @@ export function LinesPage() {
       toast({
         variant: 'destructive',
         title: 'فشل الحفظ',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (!toggleTarget) return;
+    try {
+      if (toggleTarget.status === 'ACTIVE') {
+        await deactivateMutation.mutateAsync(toggleTarget.id);
+        toast({ title: 'تم التعطيل' });
+      } else {
+        await activateMutation.mutateAsync(toggleTarget.id);
+        toast({ title: 'تم التفعيل' });
+      }
+      setToggleTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل التغيير',
         description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
       });
     }
@@ -108,7 +138,12 @@ export function LinesPage() {
         />
       ) : (
         <>
-          <LinesTable data={data.data} onEdit={handleEdit} />
+          <LinesTable
+            data={data.data}
+            onEdit={handleEdit}
+            onToggleStatus={setToggleTarget}
+            isUpdating={isStatusUpdating}
+          />
           {totalPages > 1 && (
             <Pagination
               page={page}
@@ -128,6 +163,25 @@ export function LinesPage() {
         onSubmit={handleFormSubmit}
         initialData={editing}
         isSubmitting={isSubmitting}
+      />
+
+      <ConfirmDialog
+        open={!!toggleTarget}
+        onOpenChange={(open) => !open && setToggleTarget(null)}
+        onConfirm={handleToggleStatus}
+        title={
+          toggleTarget?.status === 'ACTIVE'
+            ? 'تعطيل الخط'
+            : 'تفعيل الخط'
+        }
+        description={
+          toggleTarget?.status === 'ACTIVE'
+            ? `سيتم تعطيل "${toggleTarget.name}".`
+            : `سيتم تفعيل "${toggleTarget?.name}".`
+        }
+        confirmLabel={toggleTarget?.status === 'ACTIVE' ? 'تعطيل' : 'تفعيل'}
+        variant={toggleTarget?.status === 'ACTIVE' ? 'destructive' : 'default'}
+        isLoading={isStatusUpdating}
       />
     </div>
   );

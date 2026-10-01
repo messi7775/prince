@@ -190,6 +190,60 @@ export class LinesService {
     return this.toLine(row);
   }
 
+  async activate(
+    id: string,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<Line> {
+    return this.setStatus(id, 'ACTIVE', userId, req);
+  }
+
+  async deactivate(
+    id: string,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<Line> {
+    return this.setStatus(id, 'INACTIVE', userId, req);
+  }
+
+  private async setStatus(
+    id: string,
+    status: 'ACTIVE' | 'INACTIVE',
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<Line> {
+    const existing = await this.prisma.line.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException({
+        message: 'الخط غير موجود',
+        code: 'LINE_NOT_FOUND',
+      });
+    }
+
+    if (existing.status === status) {
+      return this.toLine(existing);
+    }
+
+    const row = await this.prisma.line.update({
+      where: { id },
+      data: { status },
+    });
+
+    await this.auditService.log({
+      userId,
+      action:
+        status === 'ACTIVE' ? 'LINE_ACTIVATED' : 'LINE_DEACTIVATED',
+      entityType: 'Line',
+      entityId: id,
+      oldValues: { status: existing.status },
+      newValues: { status },
+      ipAddress: req.ip ?? null,
+      userAgent: req.userAgent ?? null,
+    });
+
+    return this.toLine(row);
+  }
+
   private toLine(row: {
     id: string;
     name: string;

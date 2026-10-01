@@ -5,9 +5,11 @@ import {
   Banknote,
   CreditCard,
   Pencil,
+  Plus,
   ShoppingCart,
 } from 'lucide-react';
 import type { CreateDistributorInput } from '@prince-net/validation';
+import type { Payment } from '@prince-net/types';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/button';
 import { Badge } from '../../../components/ui/badge';
@@ -15,6 +17,7 @@ import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Pagination } from '../../../components/ui/pagination';
 import { StatCard } from '../../dashboard/components/StatCard';
+import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import {
   Tabs,
   TabsContent,
@@ -36,7 +39,13 @@ import { useDistributorBalance } from '../hooks/useDistributorBalance';
 import { useDistributorSales } from '../hooks/useDistributorSales';
 import { useDistributorPayments } from '../hooks/useDistributorPayments';
 import { useUpdateDistributor } from '../hooks/useUpdateDistributor';
+import {
+  useActivateDistributor,
+  useDeactivateDistributor,
+} from '../hooks/useDistributorStatus';
 import { DistributorFormDialog } from '../components/DistributorFormDialog';
+import { RegisterPaymentDialog } from '../components/RegisterPaymentDialog';
+import { ReversePaymentDialog } from '../../payments/components/ReversePaymentDialog';
 import { formatMoney } from '../../../lib/currency';
 import { formatDate, formatDateTime } from '../../../lib/format';
 import { ApiClientError } from '../../../lib/api-client';
@@ -48,6 +57,10 @@ export function DistributorDetailsPage() {
   const { toast } = useToast();
 
   const [editOpen, setEditOpen] = useState(false);
+  const [toggleTarget, setToggleTarget] = useState<boolean | null>(null);
+  const [registerPaymentOpen, setRegisterPaymentOpen] = useState(false);
+  const [reversePaymentTarget, setReversePaymentTarget] =
+    useState<Payment | null>(null);
   const [salesPage, setSalesPage] = useState(1);
   const [paymentsPage, setPaymentsPage] = useState(1);
 
@@ -66,6 +79,8 @@ export function DistributorDetailsPage() {
     order: 'desc',
   });
   const updateMutation = useUpdateDistributor();
+  const activateMutation = useActivateDistributor();
+  const deactivateMutation = useDeactivateDistributor();
 
   if (distributorQuery.isLoading) {
     return <LoadingState message="جارٍ تحميل الموزع..." />;
@@ -86,6 +101,8 @@ export function DistributorDetailsPage() {
   }
 
   const d = distributorQuery.data;
+  const isStatusUpdating =
+    activateMutation.isPending || deactivateMutation.isPending;
 
   const handleUpdate = async (input: CreateDistributorInput) => {
     try {
@@ -96,6 +113,26 @@ export function DistributorDetailsPage() {
       toast({
         variant: 'destructive',
         title: 'فشل التحديث',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (toggleTarget === null) return;
+    try {
+      if (toggleTarget) {
+        await deactivateMutation.mutateAsync(d.id);
+        toast({ title: 'تم التعطيل' });
+      } else {
+        await activateMutation.mutateAsync(d.id);
+        toast({ title: 'تم التفعيل' });
+      }
+      setToggleTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل التغيير',
         description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
       });
     }
@@ -115,10 +152,19 @@ export function DistributorDetailsPage() {
           title={d.name}
           description={d.phone}
           actions={
-            <Button variant="outline" onClick={() => setEditOpen(true)}>
-              <Pencil className="me-2 h-4 w-4" />
-              تعديل
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditOpen(true)}>
+                <Pencil className="me-2 h-4 w-4" />
+                تعديل
+              </Button>
+              <Button
+                variant={d.status === 'ACTIVE' ? 'destructive' : 'default'}
+                onClick={() => setToggleTarget(d.status === 'ACTIVE')}
+                disabled={isStatusUpdating}
+              >
+                {d.status === 'ACTIVE' ? 'تعطيل' : 'تفعيل'}
+              </Button>
+            </div>
           }
         />
 
@@ -172,14 +218,23 @@ export function DistributorDetailsPage() {
         </TabsList>
 
         {balanceQuery.data && balanceQuery.data.balance !== '0.00' && balanceQuery.data.balance !== '0' && (
-          <div className="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950">
-            <Banknote className="h-4 w-4 text-amber-600" />
-            <span className="text-muted-foreground">
-              الرصيد المتبقي على الموزع:{' '}
-              <span className="font-bold text-foreground">
-                {formatMoney(balanceQuery.data.balance)}
+          <div className="flex items-center justify-between gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm dark:border-amber-900 dark:bg-amber-950">
+            <div className="flex items-center gap-2">
+              <Banknote className="h-4 w-4 text-amber-600" />
+              <span className="text-muted-foreground">
+                الرصيد المتبقي على الموزع:{' '}
+                <span className="font-bold text-foreground">
+                  {formatMoney(balanceQuery.data.balance)}
+                </span>
               </span>
-            </span>
+            </div>
+            <Button
+              size="sm"
+              onClick={() => setRegisterPaymentOpen(true)}
+            >
+              <Plus className="me-2 h-4 w-4" />
+              تسجيل دفعة
+            </Button>
           </div>
         )}
 
@@ -201,6 +256,7 @@ export function DistributorDetailsPage() {
                       <TableHead>رقم الفاتورة</TableHead>
                       <TableHead>التاريخ</TableHead>
                       <TableHead>الإجمالي</TableHead>
+                      <TableHead>المتبقي</TableHead>
                       <TableHead>الحالة</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -220,6 +276,11 @@ export function DistributorDetailsPage() {
                         </TableCell>
                         <TableCell className="num">
                           {formatMoney(s.totalAmount)}
+                        </TableCell>
+                        <TableCell className="num">
+                          {s.remainingAmount
+                            ? formatMoney(s.remainingAmount)
+                            : '—'}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -265,6 +326,7 @@ export function DistributorDetailsPage() {
                       <TableHead>المبلغ</TableHead>
                       <TableHead>الحالة</TableHead>
                       <TableHead>ملاحظات</TableHead>
+                      <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -287,6 +349,18 @@ export function DistributorDetailsPage() {
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]">
                           {p.notes ?? '—'}
+                        </TableCell>
+                        <TableCell>
+                          {p.status === 'ACTIVE' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive"
+                              onClick={() => setReversePaymentTarget(p)}
+                            >
+                              عكس
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -311,6 +385,34 @@ export function DistributorDetailsPage() {
         onSubmit={handleUpdate}
         initialData={d}
         isSubmitting={updateMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={toggleTarget !== null}
+        onOpenChange={(open) => !open && setToggleTarget(null)}
+        onConfirm={handleToggleStatus}
+        title={toggleTarget ? 'تعطيل الموزع' : 'تفعيل الموزع'}
+        description={
+          toggleTarget
+            ? `سيتم تعطيل "${d.name}" — لن يمكن إنشاء مبيعات جديدة له.`
+            : `سيتم تفعيل "${d.name}".`
+        }
+        confirmLabel={toggleTarget ? 'تعطيل' : 'تفعيل'}
+        variant={toggleTarget ? 'destructive' : 'default'}
+        isLoading={isStatusUpdating}
+      />
+
+      <RegisterPaymentDialog
+        open={registerPaymentOpen}
+        onOpenChange={setRegisterPaymentOpen}
+        sales={salesQuery.data?.data ?? []}
+      />
+
+      <ReversePaymentDialog
+        open={!!reversePaymentTarget}
+        onOpenChange={(open) => !open && setReversePaymentTarget(null)}
+        payment={reversePaymentTarget}
+        saleId={reversePaymentTarget?.saleId ?? ''}
       />
     </div>
   );

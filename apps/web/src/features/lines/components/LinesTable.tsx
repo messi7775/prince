@@ -23,9 +23,16 @@ import { formatMoney } from '../../../lib/currency';
 interface LinesTableProps {
   data: Line[];
   onEdit: (line: Line) => void;
+  onToggleStatus: (line: Line) => void;
+  isUpdating: boolean;
 }
 
-export function LinesTable({ data, onEdit }: LinesTableProps) {
+export function LinesTable({
+  data,
+  onEdit,
+  onToggleStatus,
+  isUpdating,
+}: LinesTableProps) {
   if (data.length === 0) {
     return (
       <EmptyState
@@ -72,7 +79,7 @@ export function LinesTable({ data, onEdit }: LinesTableProps) {
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" disabled={isUpdating}>
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -82,6 +89,16 @@ export function LinesTable({ data, onEdit }: LinesTableProps) {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onEdit(line)}>
                       تعديل
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onToggleStatus(line)}
+                      className={
+                        line.status === 'ACTIVE'
+                          ? 'text-destructive'
+                          : 'text-green-600'
+                      }
+                    >
+                      {line.status === 'ACTIVE' ? 'تعطيل' : 'تفعيل'}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
