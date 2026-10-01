@@ -32,9 +32,10 @@ docker compose -f docker-compose.base44.yml up -d
 
 ## Required env vars
 
-- `JWT_SECRET` (≥32 chars), `CSRF_SECRET` (≥16 chars), `ADMIN_PASSWORD` (≥12 chars) — generated development placeholders delivered via `/run/base44/app.env`; fallback placeholders in `.env.base44-defaults`
+- `JWT_SECRET` (≥32 chars), `CSRF_SECRET` (≥16 chars), `ADMIN_PASSWORD` (≥12 chars) — delivered via `/run/base44/app.env`; fallback placeholders in `.env.base44-defaults`
+- `ADMIN_EMAIL` — set in `.env.base44-defaults` (overridable via `/run/base44/app.env`)
 - `DATABASE_URL` — set inline in compose (points to `db` service)
-- `CORS_ORIGIN`, `BACKUP_DIR`, `ADMIN_EMAIL` — set inline in compose
+- `CORS_ORIGIN`, `BACKUP_DIR` — set inline in compose
 - `API_PROXY_TARGET` — set to `http://api:3000` for the web container's Vite proxy
 
 ## Key files
@@ -48,6 +49,15 @@ docker compose -f docker-compose.base44.yml up -d
 
 - **Missing backups module**: `apps/api/src/backups/` was imported in `app.module.ts` but the directory didn't exist. Created `backups.module.ts`, `backups.controller.ts`, `backups.service.ts` implementing `GET /backups`, `POST /backups`, `POST /backups/:id/restore` with advisory locks and proper transaction isolation (RepeatableRead for create, Serializable for restore).
 - **Vite proxy target**: `apps/web/vite.config.ts` proxy target changed to read `API_PROXY_TARGET` env var (defaults to `http://localhost:3000`) so the Vite dev server can proxy to the API container in Docker.
+- **Vite allowedHosts**: Added `allowedHosts: true` to the Vite server config so it accepts the preview proxy's rotating host header.
+
+## Fixes applied during audit
+
+- **Backups TRUNCATE table names**: The restore operation used Prisma model names (e.g. `cashMovement`) in the raw SQL `TRUNCATE` statement instead of actual SQL table names (e.g. `cash_movements`). Added a `PRISMA_TO_SQL` mapping so `TRUNCATE` uses correct table names.
+- **Backups checksum verification**: Restore now verifies the SHA-256 checksum of the decompressed backup file against the stored checksum before proceeding. Throws `BACKUP_CHECKSUM_MISMATCH` on mismatch.
+- **Backups gzip compression**: Backup files are now gzip-compressed (`.json.gz` extension). `sizeBytes` stores the compressed file size. Checksum is calculated on the uncompressed JSON for consistency.
+- **Seed password update**: Changed `update: {}` to `update: { passwordHash }` in the admin user upsert so the password is updated when the user already exists.
+- **Admin email config**: Moved `ADMIN_EMAIL` from compose `environment:` to `.env.base44-defaults` (set to `ibrabra651@gmail.com`) so it can be overridden via `/run/base44/app.env`.
 
 ## Notes
 
