@@ -310,7 +310,7 @@ export class PaymentsService {
           const newAmount = new Prisma.Decimal(input.amount);
           const sale = await tx.sale.findUnique({
             where: { id: existing.saleId },
-            select: { total_amount: true, invoice_number: true, status: true },
+            select: { totalAmount: true, invoiceNumber: true, status: true },
           });
           if (!sale) {
             throw new NotFoundException({
@@ -335,7 +335,7 @@ export class PaymentsService {
             _sum: { amount: true },
           });
           const otherPaid = paidAgg._sum.amount ?? new Prisma.Decimal(0);
-          const remaining = sale.total_amount.minus(otherPaid);
+          const remaining = sale.totalAmount.minus(otherPaid);
 
           if (newAmount.gt(remaining)) {
             throw new BusinessException(
