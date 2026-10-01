@@ -56,9 +56,9 @@ export function LinePaymentsTable({
           <TableRow>
             <TableHead>التاريخ</TableHead>
             <TableHead>المبلغ</TableHead>
-            <TableHead>الفترة</TableHead>
+            <TableHead className="hidden sm:table-cell">الفترة</TableHead>
             <TableHead>الحالة</TableHead>
-            <TableHead>ملاحظات</TableHead>
+            <TableHead className="hidden md:table-cell">ملاحظات</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
@@ -74,13 +74,13 @@ export function LinePaymentsTable({
                 <TableCell className="num font-medium">
                   {formatMoney(payment.amount)}
                 </TableCell>
-                <TableCell className="text-sm">{payment.period}</TableCell>
+                <TableCell className="hidden sm:table-cell text-sm">{payment.period}</TableCell>
                 <TableCell>
                   <Badge variant={isActive ? 'success' : 'secondary'}>
                     {isActive ? 'نشطة' : 'معكوسة'}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground max-w-[240px] truncate">
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[240px] truncate">
                   {payment.reversalReason
                     ? `معكوسة: ${payment.reversalReason}`
                     : (payment.notes ?? '—')}

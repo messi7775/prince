@@ -49,7 +49,7 @@ export function ExpenseCategoriesTable({
         <TableHeader>
           <TableRow>
             <TableHead>الاسم</TableHead>
-            <TableHead>الوصف</TableHead>
+            <TableHead className="hidden sm:table-cell">الوصف</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>
@@ -58,7 +58,7 @@ export function ExpenseCategoriesTable({
           {data.map((category) => (
             <TableRow key={category.id}>
               <TableCell className="font-medium">{category.name}</TableCell>
-              <TableCell className="text-sm text-muted-foreground max-w-[400px] truncate">
+              <TableCell className="hidden sm:table-cell text-sm text-muted-foreground max-w-[400px] truncate">
                 {category.description ?? '—'}
               </TableCell>
               <TableCell>

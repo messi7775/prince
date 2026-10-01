@@ -49,8 +49,8 @@ export function LinesTable({
         <TableHeader>
           <TableRow>
             <TableHead>الاسم</TableHead>
-            <TableHead>المزود</TableHead>
-            <TableHead>المعرّف</TableHead>
+            <TableHead className="hidden sm:table-cell">المزود</TableHead>
+            <TableHead className="hidden md:table-cell">المعرّف</TableHead>
             <TableHead>التكلفة</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead className="w-12"></TableHead>
@@ -64,8 +64,8 @@ export function LinesTable({
                   {line.name}
                 </Link>
               </TableCell>
-              <TableCell className="text-sm">{line.provider}</TableCell>
-              <TableCell className="num text-sm">{line.identifier}</TableCell>
+              <TableCell className="hidden sm:table-cell text-sm">{line.provider}</TableCell>
+              <TableCell className="hidden md:table-cell num text-sm">{line.identifier}</TableCell>
               <TableCell className="num">
                 {formatMoney(line.cost)}
               </TableCell>

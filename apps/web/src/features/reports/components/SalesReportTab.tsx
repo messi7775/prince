@@ -72,7 +72,7 @@ export function SalesReportTab({ dateFrom, dateTo }: SalesReportTabProps) {
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-3">
         <div className="space-y-1">
           <Label className="text-xs">الموزع</Label>
           <Select
@@ -134,7 +134,7 @@ export function SalesReportTab({ dateFrom, dateTo }: SalesReportTabProps) {
       </div>
 
       {/* Summary */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="عدد الفواتير"
           value={String(data.summary.salesCount)}
@@ -172,28 +172,28 @@ export function SalesReportTab({ dateFrom, dateTo }: SalesReportTabProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>التاريخ</TableHead>
+                <TableHead className="hidden sm:table-cell">التاريخ</TableHead>
                 <TableHead>رقم الفاتورة</TableHead>
-                <TableHead>الموزع</TableHead>
-                <TableHead>الباقة</TableHead>
-                <TableHead>الكمية</TableHead>
+                <TableHead className="hidden md:table-cell">الموزع</TableHead>
+                <TableHead className="hidden sm:table-cell">الباقة</TableHead>
+                <TableHead className="hidden md:table-cell">الكمية</TableHead>
                 <TableHead>الإجمالي</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.rows.map((row, i) => (
                 <TableRow key={`${row.invoiceNumber}-${i}`}>
-                  <TableCell className="text-sm whitespace-nowrap">
+                  <TableCell className="hidden sm:table-cell text-sm whitespace-nowrap">
                     {formatDate(row.date)}
                   </TableCell>
                   <TableCell className="num text-sm font-medium">
                     {row.invoiceNumber}
                   </TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell className="hidden md:table-cell text-sm">
                     {row.distributorName}
                   </TableCell>
-                  <TableCell className="text-sm">{row.packageName}</TableCell>
-                  <TableCell className="num">{row.quantity}</TableCell>
+                  <TableCell className="hidden sm:table-cell text-sm">{row.packageName}</TableCell>
+                  <TableCell className="hidden md:table-cell num">{row.quantity}</TableCell>
                   <TableCell className="num font-medium">
                     {formatMoney(row.total)}
                   </TableCell>

@@ -67,13 +67,14 @@ export function Pagination({
       role="navigation"
       aria-label="pagination"
       className={cn(
-        'mx-auto flex w-full justify-center items-center gap-1',
+        'mx-auto flex w-full justify-center items-center gap-0.5 sm:gap-1',
         className,
       )}
     >
       <Button
         variant="outline"
         size="icon"
+        className="h-8 w-8 sm:h-10 sm:w-10"
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
         aria-label="الصفحة السابقة"
@@ -86,7 +87,7 @@ export function Pagination({
           return (
             <span
               key={`ellipsis-${index}`}
-              className="flex h-10 w-10 items-center justify-center"
+              className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center"
               aria-hidden
             >
               <MoreHorizontal className="h-4 w-4" />
@@ -99,6 +100,7 @@ export function Pagination({
             key={item}
             variant={item === page ? 'default' : 'outline'}
             size="icon"
+            className="h-8 w-8 sm:h-10 sm:w-10 text-xs sm:text-sm"
             onClick={() => onPageChange(item)}
             aria-current={item === page ? 'page' : undefined}
           >
@@ -110,6 +112,7 @@ export function Pagination({
       <Button
         variant="outline"
         size="icon"
+        className="h-8 w-8 sm:h-10 sm:w-10"
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages}
         aria-label="الصفحة التالية"

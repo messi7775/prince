@@ -55,11 +55,11 @@ export function InventoryReportTab({
           <TableHeader>
             <TableRow>
               <TableHead>الباقة</TableHead>
-              <TableHead>افتتاحي</TableHead>
-              <TableHead>إضافة</TableHead>
-              <TableHead>بيع</TableHead>
-              <TableHead>إعادة</TableHead>
-              <TableHead>تعديل</TableHead>
+              <TableHead className="hidden md:table-cell">افتتاحي</TableHead>
+              <TableHead className="hidden sm:table-cell">إضافة</TableHead>
+              <TableHead className="hidden sm:table-cell">بيع</TableHead>
+              <TableHead className="hidden md:table-cell">إعادة</TableHead>
+              <TableHead className="hidden lg:table-cell">تعديل</TableHead>
               <TableHead>الحالي</TableHead>
             </TableRow>
           </TableHeader>
@@ -69,17 +69,17 @@ export function InventoryReportTab({
                 <TableCell className="font-medium">
                   {row.packageName}
                 </TableCell>
-                <TableCell className="num">{row.opening}</TableCell>
-                <TableCell className="num text-green-600">
+                <TableCell className="hidden md:table-cell num">{row.opening}</TableCell>
+                <TableCell className="hidden sm:table-cell num text-green-600">
                   +{row.added}
                 </TableCell>
-                <TableCell className="num text-red-600">
+                <TableCell className="hidden sm:table-cell num text-red-600">
                   -{row.sold}
                 </TableCell>
-                <TableCell className="num text-green-600">
+                <TableCell className="hidden md:table-cell num text-green-600">
                   +{row.returned}
                 </TableCell>
-                <TableCell className="num">
+                <TableCell className="hidden lg:table-cell num">
                   {row.adjusted >= 0 ? '+' : ''}
                   {row.adjusted}
                 </TableCell>

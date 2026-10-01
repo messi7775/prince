@@ -42,7 +42,7 @@ export function DashboardPage() {
       />
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="مبيعات اليوم"
           value={formatMoney(data.todaySales)}
@@ -81,7 +81,7 @@ export function DashboardPage() {
       </div>
 
       {/* Lists */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
         <TopPackages data={data.topPackages} />
         <DistributorDebts data={data.distributorDebts} />
         <LowStockAlerts data={data.lowStockAlerts} />

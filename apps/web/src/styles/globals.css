@@ -127,6 +127,38 @@
     direction: ltr;
     unicode-bidi: embed;
   }
+
+  /* Hide scrollbar utility for horizontal scroll areas */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Mobile-first responsive tweaks
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  /* Tighter scrollbars on mobile */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  /* Prevent text inflation on mobile */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Better tap target spacing for table rows */
+  table {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════

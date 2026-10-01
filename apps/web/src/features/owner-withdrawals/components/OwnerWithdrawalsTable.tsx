@@ -52,7 +52,7 @@ export function OwnerWithdrawalsTable({
             <TableHead>السبب</TableHead>
             <TableHead>المبلغ</TableHead>
             <TableHead>الحالة</TableHead>
-            <TableHead>ملاحظات</TableHead>
+            <TableHead className="hidden md:table-cell">ملاحظات</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
@@ -76,7 +76,7 @@ export function OwnerWithdrawalsTable({
                     {isActive ? 'نشط' : 'معكوس'}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[200px] truncate">
                   {w.notes ?? '—'}
                 </TableCell>
                 <TableCell>

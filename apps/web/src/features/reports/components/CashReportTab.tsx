@@ -43,7 +43,7 @@ export function CashReportTab({ dateFrom, dateTo }: CashReportTabProps) {
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="الرصيد الافتتاحي"
           value={formatMoney(data.summary.opening)}
@@ -83,8 +83,8 @@ export function CashReportTab({ dateFrom, dateTo }: CashReportTabProps) {
               <TableRow>
                 <TableHead>التاريخ</TableHead>
                 <TableHead>الاتجاه</TableHead>
-                <TableHead>المصدر</TableHead>
-                <TableHead>الوصف</TableHead>
+                <TableHead className="hidden sm:table-cell">المصدر</TableHead>
+                <TableHead className="hidden md:table-cell">الوصف</TableHead>
                 <TableHead>المبلغ</TableHead>
               </TableRow>
             </TableHeader>
@@ -101,8 +101,8 @@ export function CashReportTab({ dateFrom, dateTo }: CashReportTabProps) {
                       {row.direction === 'IN' ? 'وارد' : 'صادر'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm">{cashSourceLabel(row.sourceType)}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[240px] truncate">
+                  <TableCell className="hidden sm:table-cell text-sm">{cashSourceLabel(row.sourceType)}</TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[240px] truncate">
                     {row.description || '—'}
                   </TableCell>
                   <TableCell

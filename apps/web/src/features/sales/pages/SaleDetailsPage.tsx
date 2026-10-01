@@ -185,13 +185,13 @@ export function SaleDetailsPage() {
           title={`فاتورة ${sale.invoiceNumber}`}
           description={formatDateTime(sale.saleDate)}
           actions={
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handlePrint}>
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline" onClick={handlePrint} size="sm" className="flex-1 sm:flex-none">
                 <Printer className="me-2 h-4 w-4" />
                 طباعة
               </Button>
               {!isCancelled && (
-                <Button variant="outline" onClick={() => setEditOpen(true)}>
+                <Button variant="outline" onClick={() => setEditOpen(true)} size="sm" className="flex-1 sm:flex-none">
                   <Pencil className="me-2 h-4 w-4" />
                   تعديل
                 </Button>
@@ -200,6 +200,8 @@ export function SaleDetailsPage() {
                 <Button
                   variant="destructive"
                   onClick={() => setCancelOpen(true)}
+                  size="sm"
+                  className="flex-1 sm:flex-none"
                 >
                   <AlertTriangle className="me-2 h-4 w-4" />
                   إلغاء الفاتورة
@@ -236,7 +238,7 @@ export function SaleDetailsPage() {
       )}
 
       {/* Financial Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
         <StatCard
           title="إجمالي الفاتورة"
           value={formatMoney(sale.totalAmount)}
@@ -284,7 +286,7 @@ export function SaleDetailsPage() {
               <TableRow>
                 <TableHead>الباقة</TableHead>
                 <TableHead>الكمية</TableHead>
-                <TableHead>سعر الوحدة</TableHead>
+                <TableHead className="hidden sm:table-cell">سعر الوحدة</TableHead>
                 <TableHead>الإجمالي</TableHead>
               </TableRow>
             </TableHeader>
@@ -295,7 +297,7 @@ export function SaleDetailsPage() {
                     {item.packageNameSnapshot}
                   </TableCell>
                   <TableCell className="num">{item.quantity}</TableCell>
-                  <TableCell className="num">
+                  <TableCell className="hidden sm:table-cell num">
                     {formatMoney(item.unitPrice)}
                   </TableCell>
                   <TableCell className="num font-medium">

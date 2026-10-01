@@ -49,9 +49,9 @@ export function DistributorsTable({
         <TableHeader>
           <TableRow>
             <TableHead>الاسم</TableHead>
-            <TableHead>الهاتف</TableHead>
+            <TableHead className="hidden sm:table-cell">الهاتف</TableHead>
             <TableHead>الحالة</TableHead>
-            <TableHead>تاريخ التسجيل</TableHead>
+            <TableHead className="hidden md:table-cell">تاريخ التسجيل</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
@@ -66,7 +66,7 @@ export function DistributorsTable({
                   {d.name}
                 </Link>
               </TableCell>
-              <TableCell className="num">{d.phone}</TableCell>
+              <TableCell className="hidden sm:table-cell num">{d.phone}</TableCell>
               <TableCell>
                 <Badge
                   variant={d.status === 'ACTIVE' ? 'success' : 'secondary'}
@@ -74,7 +74,7 @@ export function DistributorsTable({
                   {d.status === 'ACTIVE' ? 'مفعّل' : 'معطّل'}
                 </Badge>
               </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
+              <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
                 {formatDate(d.registrationDate)}
               </TableCell>
               <TableCell>

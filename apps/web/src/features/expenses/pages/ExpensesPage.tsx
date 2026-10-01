@@ -126,12 +126,12 @@ export function ExpensesPage() {
         title="المصروفات"
         description="إدارة مصروفات الشبكة"
         actions={
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setCategoriesOpen(true)}>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={() => setCategoriesOpen(true)} className="flex-1 sm:flex-none">
               <Tags className="me-2 h-4 w-4" />
               التصنيفات
             </Button>
-            <Button onClick={handleCreate}>
+            <Button onClick={handleCreate} className="flex-1 sm:flex-none">
               <Plus className="me-2 h-4 w-4" />
               مصروف جديد
             </Button>

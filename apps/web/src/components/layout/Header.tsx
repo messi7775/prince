@@ -36,7 +36,7 @@ export function Header({ onMenuClick }: HeaderProps) {
           </Button>
 
           <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-            <span className="text-xl font-bold tracking-tight">
+            <span className="text-lg font-bold tracking-tight sm:text-xl">
               البرنس نت
             </span>
           </Link>

@@ -30,7 +30,7 @@ export function AppLayout() {
         {/* Main Content */}
         <main className="flex-1 min-w-0">
           <LowStockBanner />
-          <div className="container mx-auto max-w-7xl p-4 lg:p-6">
+          <div className="container mx-auto max-w-7xl p-3 sm:p-4 lg:p-6">
             <Outlet />
           </div>
         </main>

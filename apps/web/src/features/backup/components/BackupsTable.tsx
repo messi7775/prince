@@ -40,11 +40,11 @@ export function BackupsTable({ data, onRestore }: BackupsTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead>اسم الملف</TableHead>
-            <TableHead>الحجم</TableHead>
-            <TableHead>عدد السجلات</TableHead>
-            <TableHead>Checksum</TableHead>
-            <TableHead>التاريخ</TableHead>
-            <TableHead className="w-24"></TableHead>
+            <TableHead className="hidden sm:table-cell">الحجم</TableHead>
+            <TableHead className="hidden md:table-cell">عدد السجلات</TableHead>
+            <TableHead className="hidden lg:table-cell">Checksum</TableHead>
+            <TableHead className="hidden sm:table-cell">التاريخ</TableHead>
+            <TableHead className="w-20"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -58,16 +58,16 @@ export function BackupsTable({ data, onRestore }: BackupsTableProps) {
                   </span>
                 </div>
               </TableCell>
-              <TableCell className="num text-sm">
+              <TableCell className="hidden sm:table-cell num text-sm">
                 {formatFileSize(backup.sizeBytes)}
               </TableCell>
-              <TableCell className="num text-sm">
+              <TableCell className="hidden md:table-cell num text-sm">
                 {backup.recordCount}
               </TableCell>
-              <TableCell className="num text-xs text-muted-foreground">
+              <TableCell className="hidden lg:table-cell num text-xs text-muted-foreground">
                 {shortChecksum(backup.checksum)}…
               </TableCell>
-              <TableCell className="text-sm whitespace-nowrap">
+              <TableCell className="hidden sm:table-cell text-sm whitespace-nowrap">
                 {formatDateTime(backup.createdAt)}
               </TableCell>
               <TableCell>

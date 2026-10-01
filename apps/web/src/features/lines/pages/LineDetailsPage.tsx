@@ -167,8 +167,8 @@ export function LineDetailsPage() {
           title={line.name}
           description={line.provider}
           actions={
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setEditOpen(true)}>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={() => setEditOpen(true)} className="flex-1 sm:flex-none">
                 <Pencil className="me-2 h-4 w-4" />
                 تعديل
               </Button>
@@ -176,6 +176,7 @@ export function LineDetailsPage() {
                 variant={line.status === 'ACTIVE' ? 'destructive' : 'default'}
                 onClick={() => setToggleTarget(line.status === 'ACTIVE')}
                 disabled={isStatusUpdating}
+                className="flex-1 sm:flex-none"
               >
                 {line.status === 'ACTIVE' ? 'تعطيل' : 'تفعيل'}
               </Button>

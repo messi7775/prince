@@ -53,7 +53,7 @@ export function ReportsPage() {
       />
 
       <Tabs defaultValue="sales" className="space-y-4">
-        <TabsList className="flex flex-wrap h-auto justify-start">
+        <TabsList>
           <TabsTrigger value="sales">المبيعات</TabsTrigger>
           <TabsTrigger value="collections">التحصيلات</TabsTrigger>
           <TabsTrigger value="cash">الصندوق</TabsTrigger>

@@ -201,8 +201,8 @@ export function DistributorDetailsPage() {
           title={d.name}
           description={d.phone}
           actions={
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setEditOpen(true)}>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={() => setEditOpen(true)} className="flex-1 sm:flex-none">
                 <Pencil className="me-2 h-4 w-4" />
                 تعديل
               </Button>
@@ -210,6 +210,7 @@ export function DistributorDetailsPage() {
                 variant={d.status === 'ACTIVE' ? 'destructive' : 'default'}
                 onClick={() => setToggleTarget(d.status === 'ACTIVE')}
                 disabled={isStatusUpdating}
+                className="flex-1 sm:flex-none"
               >
                 {d.status === 'ACTIVE' ? 'تعطيل' : 'تفعيل'}
               </Button>
@@ -231,7 +232,7 @@ export function DistributorDetailsPage() {
       </div>
 
       {/* Balance Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
         <StatCard
           title="إجمالي المبيعات"
           value={
@@ -303,9 +304,9 @@ export function DistributorDetailsPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>رقم الفاتورة</TableHead>
-                      <TableHead>التاريخ</TableHead>
+                      <TableHead className="hidden sm:table-cell">التاريخ</TableHead>
                       <TableHead>الإجمالي</TableHead>
-                      <TableHead>المتبقي</TableHead>
+                      <TableHead className="hidden sm:table-cell">المتبقي</TableHead>
                       <TableHead>الحالة</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -320,13 +321,13 @@ export function DistributorDetailsPage() {
                             {s.invoiceNumber}
                           </Link>
                         </TableCell>
-                        <TableCell className="text-sm">
+                        <TableCell className="hidden sm:table-cell text-sm">
                           {formatDate(s.saleDate)}
                         </TableCell>
                         <TableCell className="num">
                           {formatMoney(s.totalAmount)}
                         </TableCell>
-                        <TableCell className="num">
+                        <TableCell className="hidden sm:table-cell num">
                           {s.remainingAmount
                             ? formatMoney(s.remainingAmount)
                             : '—'}
@@ -374,7 +375,7 @@ export function DistributorDetailsPage() {
                       <TableHead>التاريخ</TableHead>
                       <TableHead>المبلغ</TableHead>
                       <TableHead>الحالة</TableHead>
-                      <TableHead>ملاحظات</TableHead>
+                      <TableHead className="hidden sm:table-cell">ملاحظات</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -396,7 +397,7 @@ export function DistributorDetailsPage() {
                             {p.status === 'ACTIVE' ? 'نشطة' : 'معكوسة'}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]">
+                        <TableCell className="hidden sm:table-cell text-sm text-muted-foreground truncate max-w-[200px]">
                           {p.notes ?? '—'}
                         </TableCell>
                         <TableCell>

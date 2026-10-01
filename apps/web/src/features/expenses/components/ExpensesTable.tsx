@@ -54,7 +54,7 @@ export function ExpensesTable({
           <TableRow>
             <TableHead>التاريخ</TableHead>
             <TableHead>التصنيف</TableHead>
-            <TableHead>الوصف</TableHead>
+            <TableHead className="hidden sm:table-cell">الوصف</TableHead>
             <TableHead>المبلغ</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead className="w-12"></TableHead>
@@ -73,7 +73,7 @@ export function ExpensesTable({
                 <TableCell className="text-sm">
                   {category?.name ?? '—'}
                 </TableCell>
-                <TableCell className="text-sm max-w-[280px] truncate">
+                <TableCell className="hidden sm:table-cell text-sm max-w-[280px] truncate">
                   {expense.description}
                 </TableCell>
                 <TableCell className="num font-medium">

@@ -45,7 +45,7 @@ export function OwnerWithdrawalsReportTab({
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
         <StatCard
           title="عدد السحوبات"
           value={String(data.summary.count)}
@@ -72,17 +72,17 @@ export function OwnerWithdrawalsReportTab({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>التاريخ</TableHead>
+                <TableHead className="hidden sm:table-cell">التاريخ</TableHead>
                 <TableHead>السبب</TableHead>
                 <TableHead>المبلغ</TableHead>
                 <TableHead>الحالة</TableHead>
-                <TableHead>ملاحظات</TableHead>
+                <TableHead className="hidden sm:table-cell">ملاحظات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.rows.map((row, i) => (
                 <TableRow key={i}>
-                  <TableCell className="text-sm whitespace-nowrap">
+                  <TableCell className="hidden sm:table-cell text-sm whitespace-nowrap">
                     {formatDateTime(row.date)}
                   </TableCell>
                   <TableCell className="text-sm font-medium">
@@ -98,7 +98,7 @@ export function OwnerWithdrawalsReportTab({
                       {row.status === 'ACTIVE' ? 'نشطة' : 'معكوسة'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]">
+                  <TableCell className="hidden sm:table-cell text-sm text-muted-foreground truncate max-w-[200px]">
                     {row.notes ?? '—'}
                   </TableCell>
                 </TableRow>

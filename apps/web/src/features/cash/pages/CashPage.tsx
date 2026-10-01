@@ -42,14 +42,15 @@ export function CashPage() {
         title="الصندوق"
         description="إدارة حركة النقد"
         actions={
-          <div className="flex items-center gap-2">
-            <Button onClick={() => setManualInOpen(true)}>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button onClick={() => setManualInOpen(true)} className="flex-1 sm:flex-none">
               <ArrowDownCircle className="me-2 h-4 w-4" />
               إيداع يدوي
             </Button>
             <Button
               variant="outline"
               onClick={() => setManualOutOpen(true)}
+              className="flex-1 sm:flex-none"
             >
               <ArrowUpCircle className="me-2 h-4 w-4" />
               سحب يدوي
@@ -72,7 +73,7 @@ export function CashPage() {
           onRetry={() => balanceQuery.refetch()}
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
           <StatCard
             title="الرصيد الحالي"
             value={formatMoney(balanceQuery.data.balance)}

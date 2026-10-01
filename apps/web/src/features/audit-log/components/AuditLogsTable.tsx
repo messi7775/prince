@@ -110,8 +110,8 @@ export function AuditLogsTable({
             <TableRow>
               <TableHead>التاريخ والوقت</TableHead>
               <TableHead>العملية</TableHead>
-              <TableHead>المستخدم</TableHead>
-              <TableHead>السجل المتأثر</TableHead>
+              <TableHead className="hidden sm:table-cell">المستخدم</TableHead>
+              <TableHead className="hidden md:table-cell">السجل المتأثر</TableHead>
               <TableHead className="w-20"></TableHead>
             </TableRow>
           </TableHeader>
@@ -126,10 +126,10 @@ export function AuditLogsTable({
                     {ACTION_LABELS[log.action] ?? log.action}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm">
+                <TableCell className="hidden sm:table-cell text-sm">
                   {log.userEmail ?? '—'}
                 </TableCell>
-                <TableCell className="text-sm">
+                <TableCell className="hidden md:table-cell text-sm">
                   <span className="font-medium">{getEntityTypeLabel(log.entityType)}</span>
                   {log.entityId && (
                     <span className="num text-muted-foreground ms-2 text-xs">

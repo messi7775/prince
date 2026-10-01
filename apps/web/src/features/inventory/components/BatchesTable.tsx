@@ -53,7 +53,7 @@ export function BatchesTable({
             <TableHead>تاريخ الاستلام</TableHead>
             <TableHead>سعر الوحدة</TableHead>
             <TableHead>الكمية الحالية</TableHead>
-            <TableHead>ملاحظات</TableHead>
+            <TableHead className="hidden sm:table-cell">ملاحظات</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
@@ -79,7 +79,7 @@ export function BatchesTable({
                   {batch.currentQuantity}
                 </Badge>
               </TableCell>
-              <TableCell className="text-sm text-muted-foreground truncate max-w-[200px]">
+              <TableCell className="hidden sm:table-cell text-sm text-muted-foreground truncate max-w-[200px]">
                 {batch.notes ?? '—'}
               </TableCell>
               <TableCell>
