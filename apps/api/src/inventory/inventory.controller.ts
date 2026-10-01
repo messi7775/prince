@@ -30,6 +30,11 @@ type AuthUser = { userId: string; email: string };
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
+  @Get('low-stock')
+  async getLowStock() {
+    return this.inventoryService.getLowStock();
+  }
+
   @Get()
   async listOverview() {
     return this.inventoryService.listOverview();

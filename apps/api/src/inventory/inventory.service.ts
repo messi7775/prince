@@ -7,6 +7,7 @@ import type {
   PackageStockSummary,
   PaginatedResponse,
   PaginationMeta,
+  LowStockAlert,
 } from '@prince-net/types';
 import type {
   AddInventoryInput,
@@ -30,6 +31,58 @@ export class InventoryService {
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
   ) {}
+
+  // ───────────────────────────────────────────────────────────
+  // Low-stock alerts — الباقات التي وصلت للحد المنخفض
+  // ───────────────────────────────────────────────────────────
+  async getLowStock(): Promise<LowStockAlert[]> {
+    const settings = await this.prisma.settings.findUnique({
+      where: { singletonKey: 'main' },
+      select: { lowStockThreshold: true },
+    });
+    const threshold = settings?.lowStockThreshold ?? 10;
+
+    const packages = await this.prisma.package.findMany({
+      where: { status: 'ACTIVE' },
+      select: { id: true, name: true },
+    });
+
+    const stocks = await this.prisma.packageStock.findMany({
+      select: {
+        packageId: true,
+        inventoryMovements: {
+          select: { quantityDelta: true },
+        },
+      },
+    });
+
+    const stockByPackage = new Map<string, number>();
+    for (const stock of stocks) {
+      const total = stock.inventoryMovements.reduce(
+        (sum, m) => sum + m.quantityDelta,
+        0,
+      );
+      stockByPackage.set(
+        stock.packageId,
+        (stockByPackage.get(stock.packageId) ?? 0) + total,
+      );
+    }
+
+    const alerts: LowStockAlert[] = [];
+    for (const pkg of packages) {
+      const currentStock = stockByPackage.get(pkg.id) ?? 0;
+      if (currentStock <= threshold) {
+        alerts.push({
+          packageId: pkg.id,
+          packageName: pkg.name,
+          currentStock,
+          threshold,
+        });
+      }
+    }
+
+    return alerts;
+  }
 
   // ───────────────────────────────────────────────────────────
   // Overview — قائمة الباقات مع الرصيد الحالي

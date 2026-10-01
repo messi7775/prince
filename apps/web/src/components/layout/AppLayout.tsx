@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { MobileDrawer } from './MobileDrawer';
+import { LowStockBanner } from './LowStockBanner';
 
 export function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -28,6 +29,7 @@ export function AppLayout() {
 
         {/* Main Content */}
         <main className="flex-1 min-w-0">
+          <LowStockBanner />
           <div className="container mx-auto max-w-7xl p-4 lg:p-6">
             <Outlet />
           </div>
