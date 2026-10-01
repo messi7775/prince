@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -87,6 +88,19 @@ export class ExpenseCategoriesController {
     @Req() req: Request,
   ) {
     return this.expenseCategoriesService.deactivate(id, user.userId, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async delete(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.expenseCategoriesService.delete(id, user.userId, {
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });

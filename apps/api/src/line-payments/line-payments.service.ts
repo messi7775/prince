@@ -7,6 +7,7 @@ import type {
 } from '@prince-net/types';
 import type {
   CreateLinePaymentInput,
+  UpdateLinePaymentInput,
   ReverseLinePaymentInput,
 } from '@prince-net/validation';
 import { PrismaService } from '../prisma/prisma.service';
@@ -197,6 +198,149 @@ export class LinePaymentsService {
       });
 
       return this.toLinePayment(updated);
+    });
+  }
+
+  async update(
+    paymentId: string,
+    input: UpdateLinePaymentInput,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<LinePayment> {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.linePayment.findUnique({
+        where: { id: paymentId },
+      });
+      if (!existing) {
+        throw new NotFoundException({
+          message: 'دفعة الخط غير موجودة',
+          code: 'LINE_PAYMENT_NOT_FOUND',
+        });
+      }
+
+      if (existing.status !== 'ACTIVE') {
+        throw new BusinessException(
+          'LINE_PAYMENT_NOT_ACTIVE',
+          'لا يمكن تعديل دفعة معكوسة',
+          400,
+        );
+      }
+
+      const oldValues: Record<string, unknown> = {};
+      const newValues: Record<string, unknown> = {};
+
+      if (input.amount !== undefined) {
+        const newAmount = new Prisma.Decimal(input.amount);
+        if (!newAmount.equals(existing.amount)) {
+          oldValues.amount = existing.amount.toString();
+          newValues.amount = input.amount;
+        }
+      }
+      if (input.notes !== undefined && input.notes !== existing.notes) {
+        oldValues.notes = existing.notes;
+        newValues.notes = input.notes;
+      }
+      if (
+        input.paymentDate !== undefined &&
+        input.paymentDate.getTime() !== existing.paymentDate.getTime()
+      ) {
+        oldValues.paymentDate = existing.paymentDate.toISOString();
+        newValues.paymentDate = input.paymentDate.toISOString();
+      }
+
+      if (Object.keys(newValues).length === 0) {
+        return this.toLinePayment(existing);
+      }
+
+      const updated = await tx.linePayment.update({
+        where: { id: paymentId },
+        data: {
+          ...(input.amount !== undefined
+            ? { amount: new Prisma.Decimal(input.amount) }
+            : {}),
+          ...(input.notes !== undefined ? { notes: input.notes } : {}),
+          ...(input.paymentDate !== undefined
+            ? { paymentDate: input.paymentDate }
+            : {}),
+        },
+      });
+
+      // Update associated cash movement
+      if (input.amount !== undefined || input.paymentDate !== undefined) {
+        await tx.cashMovement.updateMany({
+          where: { sourceType: 'LINE_PAYMENT', sourceId: paymentId },
+          data: {
+            ...(input.amount !== undefined
+              ? { amount: new Prisma.Decimal(input.amount) }
+              : {}),
+            ...(input.paymentDate !== undefined
+              ? { movementDate: input.paymentDate }
+              : {}),
+          },
+        });
+      }
+
+      await this.auditService.logTx(tx, {
+        userId,
+        action: 'LINE_PAYMENT_UPDATED',
+        entityType: 'LinePayment',
+        entityId: paymentId,
+        oldValues: Object.keys(oldValues).length > 0 ? oldValues : null,
+        newValues,
+        ipAddress: req.ip ?? null,
+        userAgent: req.userAgent ?? null,
+      });
+
+      return this.toLinePayment(updated);
+    });
+  }
+
+  async delete(
+    paymentId: string,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<{ success: boolean }> {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.linePayment.findUnique({
+        where: { id: paymentId },
+      });
+      if (!existing) {
+        throw new NotFoundException({
+          message: 'دفعة الخط غير موجودة',
+          code: 'LINE_PAYMENT_NOT_FOUND',
+        });
+      }
+
+      if (existing.status !== 'ACTIVE') {
+        throw new BusinessException(
+          'LINE_PAYMENT_NOT_ACTIVE',
+          'لا يمكن حذف دفعة معكوسة',
+          400,
+        );
+      }
+
+      // Delete associated cash movement
+      await tx.cashMovement.deleteMany({
+        where: { sourceType: 'LINE_PAYMENT', sourceId: paymentId },
+      });
+
+      await tx.linePayment.delete({ where: { id: paymentId } });
+
+      await this.auditService.logTx(tx, {
+        userId,
+        action: 'LINE_PAYMENT_DELETED',
+        entityType: 'LinePayment',
+        entityId: paymentId,
+        oldValues: {
+          lineId: existing.lineId,
+          amount: existing.amount.toString(),
+          period: existing.period,
+        },
+        ipAddress: req.ip ?? null,
+        userAgent: req.userAgent ?? null,
+      });
+
+      return { success: true };
     });
   }
 

@@ -7,6 +7,7 @@ import type {
 } from '@prince-net/types';
 import type {
   CreateOwnerWithdrawalInput,
+  UpdateOwnerWithdrawalInput,
   ReverseOwnerWithdrawalInput,
 } from '@prince-net/validation';
 import { PrismaService } from '../prisma/prisma.service';
@@ -201,6 +202,154 @@ export class OwnerWithdrawalsService {
       });
 
       return this.toOwnerWithdrawal(updated);
+    });
+  }
+
+  async update(
+    id: string,
+    input: UpdateOwnerWithdrawalInput,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<OwnerWithdrawal> {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.ownerWithdrawal.findUnique({
+        where: { id },
+      });
+      if (!existing) {
+        throw new NotFoundException({
+          message: 'السحب غير موجود',
+          code: 'OWNER_WITHDRAWAL_NOT_FOUND',
+        });
+      }
+
+      if (existing.status !== 'ACTIVE') {
+        throw new BusinessException(
+          'OWNER_WITHDRAWAL_NOT_ACTIVE',
+          'لا يمكن تعديل سحب معكوس',
+          400,
+        );
+      }
+
+      const oldValues: Record<string, unknown> = {};
+      const newValues: Record<string, unknown> = {};
+
+      if (input.amount !== undefined) {
+        const newAmount = new Prisma.Decimal(input.amount);
+        if (!newAmount.equals(existing.amount)) {
+          oldValues.amount = existing.amount.toString();
+          newValues.amount = input.amount;
+        }
+      }
+      if (input.reason !== undefined && input.reason !== existing.reason) {
+        oldValues.reason = existing.reason;
+        newValues.reason = input.reason;
+      }
+      if (input.notes !== undefined && input.notes !== existing.notes) {
+        oldValues.notes = existing.notes;
+        newValues.notes = input.notes;
+      }
+      if (
+        input.withdrawalDate !== undefined &&
+        input.withdrawalDate.getTime() !== existing.withdrawalDate.getTime()
+      ) {
+        oldValues.withdrawalDate = existing.withdrawalDate.toISOString();
+        newValues.withdrawalDate = input.withdrawalDate.toISOString();
+      }
+
+      if (Object.keys(newValues).length === 0) {
+        return this.toOwnerWithdrawal(existing);
+      }
+
+      const updated = await tx.ownerWithdrawal.update({
+        where: { id },
+        data: {
+          ...(input.amount !== undefined
+            ? { amount: new Prisma.Decimal(input.amount) }
+            : {}),
+          ...(input.reason !== undefined ? { reason: input.reason } : {}),
+          ...(input.notes !== undefined ? { notes: input.notes } : {}),
+          ...(input.withdrawalDate !== undefined
+            ? { withdrawalDate: input.withdrawalDate }
+            : {}),
+        },
+      });
+
+      // Update associated cash movement
+      await tx.cashMovement.updateMany({
+        where: { sourceType: 'OWNER_WITHDRAWAL', sourceId: id },
+        data: {
+          ...(input.amount !== undefined
+            ? { amount: new Prisma.Decimal(input.amount) }
+            : {}),
+          ...(input.withdrawalDate !== undefined
+            ? { movementDate: input.withdrawalDate }
+            : {}),
+          ...(input.reason !== undefined
+            ? { description: `سحب: ${input.reason}` }
+            : {}),
+        },
+      });
+
+      await this.auditService.logTx(tx, {
+        userId,
+        action: 'OWNER_WITHDRAWAL_UPDATED',
+        entityType: 'OwnerWithdrawal',
+        entityId: id,
+        oldValues: Object.keys(oldValues).length > 0 ? oldValues : null,
+        newValues,
+        ipAddress: req.ip ?? null,
+        userAgent: req.userAgent ?? null,
+      });
+
+      return this.toOwnerWithdrawal(updated);
+    });
+  }
+
+  async delete(
+    id: string,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<{ success: boolean }> {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.ownerWithdrawal.findUnique({
+        where: { id },
+      });
+      if (!existing) {
+        throw new NotFoundException({
+          message: 'السحب غير موجود',
+          code: 'OWNER_WITHDRAWAL_NOT_FOUND',
+        });
+      }
+
+      if (existing.status !== 'ACTIVE') {
+        throw new BusinessException(
+          'OWNER_WITHDRAWAL_NOT_ACTIVE',
+          'لا يمكن حذف سحب معكوس',
+          400,
+        );
+      }
+
+      // Delete associated cash movement
+      await tx.cashMovement.deleteMany({
+        where: { sourceType: 'OWNER_WITHDRAWAL', sourceId: id },
+      });
+
+      await tx.ownerWithdrawal.delete({ where: { id } });
+
+      await this.auditService.logTx(tx, {
+        userId,
+        action: 'OWNER_WITHDRAWAL_DELETED',
+        entityType: 'OwnerWithdrawal',
+        entityId: id,
+        oldValues: {
+          amount: existing.amount.toString(),
+          reason: existing.reason,
+        },
+        ipAddress: req.ip ?? null,
+        userAgent: req.userAgent ?? null,
+      });
+
+      return { success: true };
     });
   }
 

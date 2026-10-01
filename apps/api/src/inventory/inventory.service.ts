@@ -563,6 +563,18 @@ export class InventoryService {
       );
     }
 
+    // Check if batch has SELL movements (used in sales)
+    const sellMovements = await this.prisma.inventoryMovement.count({
+      where: { packageStockId, type: 'SELL' },
+    });
+    if (sellMovements > 0) {
+      throw new BusinessException(
+        'BATCH_HAS_SALES',
+        'لا يمكن حذف دفعة تم بيع كروت منها. السجل مرتبط بمبيعات.',
+        400,
+      );
+    }
+
     await this.prisma.$transaction(async (tx) => {
       // Delete all movements for this batch
       await tx.inventoryMovement.deleteMany({

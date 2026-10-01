@@ -52,14 +52,14 @@ export const DEFAULT_PACKAGES: ReadonlyArray<DefaultPackage> = [
 ] as const;
 
 export const DEFAULT_EXPENSE_CATEGORIES = [
-  "Internet",
-  "Electricity",
-  "Maintenance",
-  "Transport",
-  "Salaries",
-  "Rent",
-  "Tools",
-  "Other",
+  "إنترنت",
+  "كهرباء",
+  "صيانة",
+  "نقل",
+  "رواتب",
+  "إيجار",
+  "أدوات",
+  "أخرى",
 ] as const;
 
 export const DEFAULT_SETTINGS = {

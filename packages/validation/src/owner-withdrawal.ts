@@ -12,8 +12,18 @@ export const reverseOwnerWithdrawalSchema = z.object({
   reason: z.string().trim().min(1, "سبب العكس مطلوب").max(500),
 });
 
+export const updateOwnerWithdrawalSchema = z.object({
+  amount: moneySchema.optional(),
+  reason: z.string().trim().min(1, "السبب مطلوب").max(250).optional(),
+  notes: z.string().trim().max(500).optional().nullable(),
+  withdrawalDate: z.coerce.date().optional(),
+});
+
 export type CreateOwnerWithdrawalInput = z.infer<
   typeof createOwnerWithdrawalSchema
+>;
+export type UpdateOwnerWithdrawalInput = z.infer<
+  typeof updateOwnerWithdrawalSchema
 >;
 export type ReverseOwnerWithdrawalInput = z.infer<
   typeof reverseOwnerWithdrawalSchema

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -97,6 +98,19 @@ export class LinesController {
     @Req() req: Request,
   ) {
     return this.linesService.deactivate(id, user.userId, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async delete(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.linesService.delete(id, user.userId, {
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });

@@ -6,6 +6,7 @@ import type {
 } from '@prince-net/validation';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { BusinessException } from '../common/exceptions/business.exception';
 
 @Injectable()
 export class ExpenseCategoriesService {
@@ -186,6 +187,45 @@ export class ExpenseCategoriesService {
     });
 
     return this.toDto(row);
+  }
+
+  async delete(
+    id: string,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<{ success: boolean }> {
+    const existing = await this.prisma.expenseCategory.findUnique({
+      where: { id },
+      include: { _count: { select: { expenses: true } } },
+    });
+    if (!existing) {
+      throw new NotFoundException({
+        message: 'تصنيف المصروف غير موجود',
+        code: 'EXPENSE_CATEGORY_NOT_FOUND',
+      });
+    }
+
+    if (existing._count.expenses > 0) {
+      throw new BusinessException(
+        'EXPENSE_CATEGORY_HAS_EXPENSES',
+        'لا يمكن حذف تصنيف مرتبط بمصروفات سابقة. استخدم التعطيل بدلاً من ذلك.',
+        400,
+      );
+    }
+
+    await this.prisma.expenseCategory.delete({ where: { id } });
+
+    await this.auditService.log({
+      userId,
+      action: 'EXPENSE_CATEGORY_DELETED',
+      entityType: 'ExpenseCategory',
+      entityId: id,
+      oldValues: { name: existing.name, description: existing.description },
+      ipAddress: req.ip ?? null,
+      userAgent: req.userAgent ?? null,
+    });
+
+    return { success: true };
   }
 
   private toDto(row: {
