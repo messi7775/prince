@@ -1,14 +1,4 @@
 import { ArrowDownCircle, ArrowUpCircle, Wallet } from 'lucide-react';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { StatCard } from '../../dashboard/components/StatCard';
@@ -50,13 +40,6 @@ export function CashReportTab({ dateFrom, dateTo }: CashReportTabProps) {
     );
   }
 
-  const chartData = [
-    { name: 'افتتاحي', value: Number(data.summary.opening) },
-    { name: 'وارد', value: Number(data.summary.totalIn) },
-    { name: 'صادر', value: Number(data.summary.totalOut) },
-    { name: 'ختامي', value: Number(data.summary.closing) },
-  ];
-
   return (
     <div className="space-y-4">
       {/* Summary */}
@@ -83,31 +66,6 @@ export function CashReportTab({ dateFrom, dateTo }: CashReportTabProps) {
           value={formatMoney(data.summary.closing)}
           icon={Wallet}
         />
-      </div>
-
-      {/* Chart */}
-      <div className="rounded-md border bg-card p-4">
-        <h3 className="text-sm font-medium mb-3">ملخص الحركة</h3>
-        <div className="h-64" dir="ltr">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip
-                formatter={(value: number) => formatMoney(String(value))}
-                contentStyle={{ direction: 'rtl' }}
-              />
-              <Legend wrapperStyle={{ direction: 'rtl', fontSize: '12px' }} />
-              <Bar
-                dataKey="value"
-                fill="hsl(var(--primary))"
-                name="المبلغ"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
       </div>
 
       {/* Table */}

@@ -10,8 +10,6 @@ import { PageHeader } from '../../../components/layout/PageHeader';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { StatCard } from '../components/StatCard';
-import { SalesChart } from '../components/SalesChart';
-import { CashChart } from '../components/CashChart';
 import { TopPackages } from '../components/TopPackages';
 import { DistributorDebts } from '../components/DistributorDebts';
 import { LowStockAlerts } from '../components/LowStockAlerts';
@@ -80,12 +78,6 @@ export function DashboardPage() {
           icon={Wallet}
           variant="warning"
         />
-      </div>
-
-      {/* Charts */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <SalesChart data={data.salesChart} />
-        <CashChart data={data.cashChart} />
       </div>
 
       {/* Lists */}
