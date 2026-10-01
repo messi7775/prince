@@ -42,7 +42,6 @@ services:
       - COOKIE_SAME_SITE=lax
       - CORS_ORIGIN=http://localhost:5173
       - BACKUP_DIR=/tmp/prince-net-backups
-      - ADMIN_EMAIL=admin@prince-net.local
       - CHOKIDAR_USEPOLLING=true
     command: ["sh", "-ec", "npm install -g pnpm@11.28.0 && mkdir -p /tmp/prince-net-backups && cd apps/api && pnpm prisma:generate && pnpm prisma:deploy && pnpm prisma:seed && exec pnpm dev"]
     depends_on:

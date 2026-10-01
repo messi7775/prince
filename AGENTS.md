@@ -55,4 +55,4 @@ docker compose -f docker-compose.base44.yml up -d
 - Prisma client is generated to `apps/api/src/generated/prisma/` (gitignored) — regenerated on each container start.
 - Vite proxy provides single-origin wiring; browser never talks to the API directly, so CORS_ORIGIN is not critical.
 - `CHOKIDAR_USEPOLLING=true` is set for file-watch reliability in bind-mounted containers.
-- Admin login: `admin@prince-net.local` / value of `ADMIN_PASSWORD` secret.
+- Admin login: `ibrabra651@gmail.com` / value of `ADMIN_PASSWORD` secret.
