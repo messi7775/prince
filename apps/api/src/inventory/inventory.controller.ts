@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -14,10 +16,12 @@ import {
   addInventorySchema,
   adjustInventorySchema,
   returnInventorySchema,
+  updateBatchSchema,
   paginationSchema,
   type AddInventoryInput,
   type AdjustInventoryInput,
   type ReturnInventoryInput,
+  type UpdateBatchInput,
   type PaginationInput,
 } from '@prince-net/validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -89,6 +93,33 @@ export class InventoryController {
     @Req() req: Request,
   ) {
     return this.inventoryService.return(body, user.userId, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
+
+  @Patch('batches/:id')
+  async updateBatch(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateBatchSchema))
+    body: UpdateBatchInput,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.inventoryService.updateBatch(id, body, user.userId, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
+
+  @Delete('batches/:id')
+  @HttpCode(HttpStatus.OK)
+  async deleteBatch(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.inventoryService.deleteBatch(id, user.userId, {
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });

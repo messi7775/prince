@@ -13,6 +13,7 @@ import type {
   AddInventoryInput,
   AdjustInventoryInput,
   ReturnInventoryInput,
+  UpdateBatchInput,
 } from '@prince-net/validation';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
@@ -462,6 +463,161 @@ export class InventoryService {
       description: movement.description,
       createdBy: movement.createdBy,
       createdAt: movement.createdAt.toISOString(),
+    };
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // updateBatch — تعديل سعر الوحدة والملاحظات لدفعة موجودة
+  // ───────────────────────────────────────────────────────────
+  async updateBatch(
+    packageStockId: string,
+    input: UpdateBatchInput,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<PackageStockSummary> {
+    const existing = await this.prisma.packageStock.findUnique({
+      where: { id: packageStockId },
+    });
+    if (!existing) {
+      throw new NotFoundException({
+        message: 'دفعة المخزون غير موجودة',
+        code: 'PACKAGE_STOCK_NOT_FOUND',
+      });
+    }
+
+    const oldValues: Record<string, unknown> = {};
+    const newValues: Record<string, unknown> = {};
+
+    if (input.unitPrice !== undefined) {
+      const newPrice = new Prisma.Decimal(input.unitPrice);
+      if (!newPrice.equals(existing.unitPrice)) {
+        oldValues.unitPrice = existing.unitPrice.toString();
+        newValues.unitPrice = input.unitPrice;
+      }
+    }
+    if (input.notes !== undefined && input.notes !== existing.notes) {
+      oldValues.notes = existing.notes;
+      newValues.notes = input.notes;
+    }
+
+    if (Object.keys(newValues).length === 0) {
+      // No changes — return current state
+    } else {
+      await this.prisma.packageStock.update({
+        where: { id: packageStockId },
+        data: {
+          ...(input.unitPrice !== undefined
+            ? { unitPrice: new Prisma.Decimal(input.unitPrice) }
+            : {}),
+          ...(input.notes !== undefined ? { notes: input.notes } : {}),
+        },
+      });
+
+      await this.auditService.log({
+        userId,
+        action: 'INVENTORY_BATCH_UPDATED',
+        entityType: 'PackageStock',
+        entityId: packageStockId,
+        oldValues: Object.keys(oldValues).length > 0 ? oldValues : null,
+        newValues,
+        ipAddress: req.ip ?? null,
+        userAgent: req.userAgent ?? null,
+      });
+    }
+
+    // Return updated summary
+    return this.getBatchSummary(packageStockId);
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // deleteBatch — حذف دفعة (فقط إذا كانت الكمية الحالية صفر)
+  // ───────────────────────────────────────────────────────────
+  async deleteBatch(
+    packageStockId: string,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<{ success: boolean }> {
+    const stock = await this.prisma.packageStock.findUnique({
+      where: { id: packageStockId },
+      select: { id: true, packageId: true },
+    });
+    if (!stock) {
+      throw new NotFoundException({
+        message: 'دفعة المخزون غير موجودة',
+        code: 'PACKAGE_STOCK_NOT_FOUND',
+      });
+    }
+
+    // Check current quantity
+    const agg = await this.prisma.inventoryMovement.aggregate({
+      where: { packageStockId },
+      _sum: { quantityDelta: true },
+    });
+    const currentQuantity = agg._sum.quantityDelta ?? 0;
+
+    if (currentQuantity !== 0) {
+      throw new BusinessException(
+        'BATCH_NOT_EMPTY',
+        'لا يمكن حذف دفعة بها كمية متبقية. استخدم تعديل الكمية لتصفيرها أولاً.',
+        400,
+      );
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      // Delete all movements for this batch
+      await tx.inventoryMovement.deleteMany({
+        where: { packageStockId },
+      });
+
+      // Delete the batch itself
+      await tx.packageStock.delete({
+        where: { id: packageStockId },
+      });
+
+      await this.auditService.logTx(tx, {
+        userId,
+        action: 'INVENTORY_BATCH_DELETED',
+        entityType: 'PackageStock',
+        entityId: packageStockId,
+        oldValues: { packageId: stock.packageId },
+        ipAddress: req.ip ?? null,
+        userAgent: req.userAgent ?? null,
+      });
+    });
+
+    return { success: true };
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // Helper — get batch summary
+  // ───────────────────────────────────────────────────────────
+  private async getBatchSummary(
+    packageStockId: string,
+  ): Promise<PackageStockSummary> {
+    const stock = await this.prisma.packageStock.findUnique({
+      where: { id: packageStockId },
+    });
+    if (!stock) {
+      throw new NotFoundException({
+        message: 'دفعة المخزون غير موجودة',
+        code: 'PACKAGE_STOCK_NOT_FOUND',
+      });
+    }
+
+    const agg = await this.prisma.inventoryMovement.aggregate({
+      where: { packageStockId },
+      _sum: { quantityDelta: true },
+    });
+
+    return {
+      id: stock.id,
+      packageId: stock.packageId,
+      unitPrice: toMoneyStringRequired(stock.unitPrice),
+      receivedAt: stock.receivedAt.toISOString(),
+      notes: stock.notes,
+      currentQuantity: agg._sum.quantityDelta ?? 0,
+      createdBy: stock.createdBy,
+      createdAt: stock.createdAt.toISOString(),
     };
   }
 }

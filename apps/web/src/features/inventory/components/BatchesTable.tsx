@@ -24,12 +24,16 @@ interface BatchesTableProps {
   data: PackageStockSummary[];
   onAdjust: (batch: PackageStockSummary) => void;
   onReturn: (batch: PackageStockSummary) => void;
+  onEdit: (batch: PackageStockSummary) => void;
+  onDelete: (batch: PackageStockSummary) => void;
 }
 
 export function BatchesTable({
   data,
   onAdjust,
   onReturn,
+  onEdit,
+  onDelete,
 }: BatchesTableProps) {
   if (data.length === 0) {
     return (
@@ -86,11 +90,21 @@ export function BatchesTable({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onEdit(batch)}>
+                      تعديل السعر والملاحظات
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onAdjust(batch)}>
                       تعديل الكمية
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onReturn(batch)}>
                       إعادة كروت
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => onDelete(batch)}
+                      disabled={batch.currentQuantity !== 0}
+                    >
+                      حذف الدفعة
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

@@ -5,6 +5,7 @@ import {
   ArrowRight,
   Banknote,
   CreditCard,
+  Pencil,
   Plus,
   Printer,
   ShoppingCart,
@@ -36,6 +37,7 @@ import { useToast } from '../../../components/ui/use-toast';
 import { useSale } from '../hooks/useSale';
 import { useCancelSale } from '../hooks/useCancelSale';
 import { CancelSaleDialog } from '../components/CancelSaleDialog';
+import { EditSaleDialog } from '../components/EditSaleDialog';
 import { usePayments } from '../../payments/hooks/usePayments';
 import { PaymentsTable } from '../../payments/components/PaymentsTable';
 import { CreatePaymentDialog } from '../../payments/components/CreatePaymentDialog';
@@ -51,6 +53,7 @@ export function SaleDetailsPage() {
   const { toast } = useToast();
 
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [createPaymentOpen, setCreatePaymentOpen] = useState(false);
   const [reverseTarget, setReverseTarget] = useState<Payment | null>(null);
@@ -121,6 +124,12 @@ export function SaleDetailsPage() {
                 <Printer className="me-2 h-4 w-4" />
                 طباعة
               </Button>
+              {!isCancelled && (
+                <Button variant="outline" onClick={() => setEditOpen(true)}>
+                  <Pencil className="me-2 h-4 w-4" />
+                  تعديل
+                </Button>
+              )}
               {!isCancelled && (
                 <Button
                   variant="destructive"
@@ -291,6 +300,12 @@ export function SaleDetailsPage() {
         onConfirm={handleCancel}
         invoiceNumber={sale.invoiceNumber}
         isLoading={cancelMutation.isPending}
+      />
+
+      <EditSaleDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        sale={sale}
       />
 
       <CreatePaymentDialog

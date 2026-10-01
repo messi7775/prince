@@ -7,7 +7,6 @@ import {
   type UseFormRegister,
   type FieldErrors,
 } from 'react-hook-form';
-import type { CreateSaleInput } from '@prince-net/validation';
 import type { PackageEntity } from '@prince-net/types';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
@@ -22,19 +21,19 @@ import {
 import { usePackages } from '../../packages/hooks/usePackages';
 import { formatMoney } from '../../../lib/currency';
 
-interface SaleItemsInputProps {
-  control: Control<CreateSaleInput>;
-  register: UseFormRegister<CreateSaleInput>;
-  errors: FieldErrors<CreateSaleInput>;
+interface SaleItemsInputProps<T extends { items: Array<{ packageId: string; quantity: number }> }> {
+  control: Control<T>;
+  register: UseFormRegister<T>;
+  errors: FieldErrors<T>;
   disabled?: boolean;
 }
 
-export function SaleItemsInput({
+export function SaleItemsInput<T extends { items: Array<{ packageId: string; quantity: number }> }>({
   control,
   register,
   errors,
   disabled = false,
-}: SaleItemsInputProps) {
+}: SaleItemsInputProps<T>) {
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'items',

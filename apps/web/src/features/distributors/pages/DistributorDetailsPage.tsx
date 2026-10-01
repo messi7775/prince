@@ -7,6 +7,7 @@ import {
   Pencil,
   Plus,
   ShoppingCart,
+  ExternalLink,
 } from 'lucide-react';
 import type { CreateDistributorInput } from '@prince-net/validation';
 import type { Payment } from '@prince-net/types';
