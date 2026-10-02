@@ -49,8 +49,8 @@ export function PackagesTable({
           <TableRow>
             <TableHead>الاسم</TableHead>
             <TableHead>السعر</TableHead>
-            <TableHead className="hidden sm:table-cell">البيانات</TableHead>
-            <TableHead className="hidden sm:table-cell">الساعات</TableHead>
+            <TableHead>البيانات</TableHead>
+            <TableHead>الساعات</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>
@@ -72,8 +72,8 @@ export function PackagesTable({
               <TableCell className="num">
                 {formatMoney(pkg.price)}
               </TableCell>
-              <TableCell className="hidden sm:table-cell">{pkg.dataSizeMb} MB</TableCell>
-              <TableCell className="hidden sm:table-cell">{pkg.hours} ساعة</TableCell>
+              <TableCell>{pkg.dataSizeMb} MB</TableCell>
+              <TableCell>{pkg.hours} ساعة</TableCell>
               <TableCell>
                 <Badge
                   variant={pkg.status === 'ACTIVE' ? 'success' : 'secondary'}

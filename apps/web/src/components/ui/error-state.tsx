@@ -21,15 +21,15 @@ export function ErrorState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center gap-2 sm:gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-6 sm:p-12 text-center',
+        'flex flex-col items-center justify-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-12 text-center',
         className,
       )}
       role="alert"
     >
-      <div className="rounded-full bg-destructive/10 p-3 sm:p-4">
-        <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8 text-destructive" />
+      <div className="rounded-full bg-destructive/10 p-4">
+        <AlertCircle className="h-8 w-8 text-destructive" />
       </div>
-      <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
+      <h3 className="text-lg font-semibold">{title}</h3>
       <p className="max-w-md text-sm text-muted-foreground">{message}</p>
       <div className="mt-2 flex gap-2">
         {onRetry && (

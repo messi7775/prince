@@ -29,20 +29,20 @@ export function StatCard({
   return (
     <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
         <div
           className={cn(
-            'flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md shrink-0',
+            'flex h-8 w-8 items-center justify-center rounded-md',
             variantStyles[variant],
           )}
         >
-          <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <Icon className="h-4 w-4" />
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-lg sm:text-2xl font-bold num">{value}</div>
+        <div className="text-2xl font-bold num">{value}</div>
         {description && (
           <p className="text-xs text-muted-foreground mt-1">{description}</p>
         )}

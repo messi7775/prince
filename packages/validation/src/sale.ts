@@ -22,14 +22,6 @@ export const cancelSaleSchema = z.object({
   reason: z.string().trim().min(1, "سبب الإلغاء مطلوب").max(500),
 });
 
-export const updateSaleSchema = z.object({
-  items: z
-    .array(saleItemInputSchema)
-    .min(1, "يجب اختيار باقة واحدة على الأقل"),
-  notes: z.string().trim().max(500).optional().nullable(),
-});
-
 export type SaleItemInput = z.infer<typeof saleItemInputSchema>;
 export type CreateSaleInput = z.infer<typeof createSaleSchema>;
 export type CancelSaleInput = z.infer<typeof cancelSaleSchema>;
-export type UpdateSaleInput = z.infer<typeof updateSaleSchema>;

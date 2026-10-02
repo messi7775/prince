@@ -64,26 +64,4 @@ export class ReportsController {
   async linesReport() {
     return this.reportsService.linesReport();
   }
-
-  @Get('collections')
-  async collectionsReport(
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-  ) {
-    return this.reportsService.collectionsReport({
-      ...(dateFrom ? { dateFrom } : {}),
-      ...(dateTo ? { dateTo } : {}),
-    });
-  }
-
-  @Get('owner-withdrawals')
-  async ownerWithdrawalsReport(
-    @Query('dateFrom') dateFrom?: string,
-    @Query('dateTo') dateTo?: string,
-  ) {
-    return this.reportsService.ownerWithdrawalsReport({
-      ...(dateFrom ? { dateFrom } : {}),
-      ...(dateTo ? { dateTo } : {}),
-    });
-  }
 }

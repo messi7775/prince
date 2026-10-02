@@ -54,14 +54,14 @@ export function MovementsTable({ data }: MovementsTableProps) {
             <TableHead>التاريخ</TableHead>
             <TableHead>النوع</TableHead>
             <TableHead>التغيير</TableHead>
-            <TableHead className="hidden sm:table-cell">سعر الوحدة</TableHead>
-            <TableHead className="hidden md:table-cell">الوصف</TableHead>
+            <TableHead>سعر الوحدة</TableHead>
+            <TableHead>الوصف</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((mv) => (
             <TableRow key={mv.id}>
-              <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
+              <TableCell className="text-sm whitespace-nowrap">
                 {formatDateTime(mv.createdAt)}
               </TableCell>
               <TableCell>
@@ -78,10 +78,10 @@ export function MovementsTable({ data }: MovementsTableProps) {
                 {mv.quantityDelta > 0 ? '+' : ''}
                 {mv.quantityDelta}
               </TableCell>
-              <TableCell className="hidden sm:table-cell num">
+              <TableCell className="num">
                 {formatMoney(mv.unitPrice)}
               </TableCell>
-              <TableCell className="hidden md:table-cell text-sm text-muted-foreground truncate max-w-[280px]">
+              <TableCell className="text-sm text-muted-foreground truncate max-w-[280px]">
                 {mv.description ?? '—'}
               </TableCell>
             </TableRow>

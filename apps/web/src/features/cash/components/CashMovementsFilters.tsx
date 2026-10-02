@@ -1,7 +1,6 @@
 import type { CashSourceType } from '@prince-net/types';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { DateFilterInput } from '../../../components/ui/date-filter-input';
 import {
   Select,
   SelectContent,
@@ -48,7 +47,7 @@ export function CashMovementsFilters({
   onDateToChange,
 }: CashMovementsFiltersProps) {
   return (
-    <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div className="space-y-1">
         <Label className="text-xs">الاتجاه</Label>
         <Select
@@ -90,9 +89,11 @@ export function CashMovementsFilters({
         <Label className="text-xs" htmlFor="cashDateFrom">
           من تاريخ
         </Label>
-        <DateFilterInput
+        <Input
+          id="cashDateFrom"
+          type="date"
           value={dateFrom}
-          onChange={onDateFromChange}
+          onChange={(e) => onDateFromChange(e.target.value)}
         />
       </div>
 
@@ -100,9 +101,11 @@ export function CashMovementsFilters({
         <Label className="text-xs" htmlFor="cashDateTo">
           إلى تاريخ
         </Label>
-        <DateFilterInput
+        <Input
+          id="cashDateTo"
+          type="date"
           value={dateTo}
-          onChange={onDateToChange}
+          onChange={(e) => onDateToChange(e.target.value)}
         />
       </div>
     </div>

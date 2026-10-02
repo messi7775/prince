@@ -47,7 +47,7 @@ export function LinesReportTab() {
             <TableRow>
               <TableHead>الخط</TableHead>
               <TableHead>إجمالي الدفعات</TableHead>
-              <TableHead className="hidden sm:table-cell">آخر دفعة</TableHead>
+              <TableHead>آخر دفعة</TableHead>
               <TableHead>الحالة</TableHead>
             </TableRow>
           </TableHeader>
@@ -58,7 +58,7 @@ export function LinesReportTab() {
                 <TableCell className="num">
                   {formatMoney(row.totalPayments)}
                 </TableCell>
-                <TableCell className="hidden sm:table-cell text-sm">
+                <TableCell className="text-sm">
                   {row.lastPaymentDate
                     ? formatDate(row.lastPaymentDate)
                     : '—'}

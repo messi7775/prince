@@ -60,8 +60,8 @@ export function CashMovementsTable({
               <TableHead>التاريخ</TableHead>
               <TableHead>الاتجاه</TableHead>
               <TableHead>المبلغ</TableHead>
-              <TableHead className="hidden sm:table-cell">المصدر</TableHead>
-              <TableHead className="hidden md:table-cell">الوصف</TableHead>
+              <TableHead>المصدر</TableHead>
+              <TableHead>الوصف</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -70,7 +70,7 @@ export function CashMovementsTable({
 
               return (
                 <TableRow key={mv.id}>
-                  <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
+                  <TableCell className="text-sm whitespace-nowrap">
                     {formatDateTime(mv.movementDate)}
                   </TableCell>
                   <TableCell>
@@ -94,10 +94,10 @@ export function CashMovementsTable({
                     {isIn ? '+' : '-'}
                     {formatMoney(mv.amount)}
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell text-sm">
+                  <TableCell className="text-sm">
                     {SOURCE_TYPE_LABELS[mv.sourceType]}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[280px] truncate">
+                  <TableCell className="text-sm text-muted-foreground max-w-[280px] truncate">
                     {mv.description ?? '—'}
                   </TableCell>
                 </TableRow>

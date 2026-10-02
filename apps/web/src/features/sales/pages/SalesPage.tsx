@@ -18,8 +18,6 @@ export function SalesPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<StatusFilter>('ALL');
   const [distributorId, setDistributorId] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading, isError, error, refetch } = useSales({
@@ -28,8 +26,6 @@ export function SalesPage() {
     search: search || undefined,
     status: status === 'ALL' ? undefined : status,
     distributorId: distributorId || undefined,
-    dateFrom: dateFrom || undefined,
-    dateTo: dateTo || undefined,
   });
 
   const totalPages = data?.meta.totalPages ?? 0;
@@ -61,16 +57,6 @@ export function SalesPage() {
         distributorId={distributorId}
         onDistributorChange={(v) => {
           setDistributorId(v);
-          setPage(1);
-        }}
-        dateFrom={dateFrom}
-        onDateFromChange={(v) => {
-          setDateFrom(v);
-          setPage(1);
-        }}
-        dateTo={dateTo}
-        onDateToChange={(v) => {
-          setDateTo(v);
           setPage(1);
         }}
       />

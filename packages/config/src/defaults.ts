@@ -51,6 +51,17 @@ export const DEFAULT_PACKAGES: ReadonlyArray<DefaultPackage> = [
   },
 ] as const;
 
+export const DEFAULT_EXPENSE_CATEGORIES = [
+  "Internet",
+  "Electricity",
+  "Maintenance",
+  "Transport",
+  "Salaries",
+  "Rent",
+  "Tools",
+  "Other",
+] as const;
+
 export const DEFAULT_SETTINGS = {
   networkName: "Prince Net",
   currencyName: "ريال",

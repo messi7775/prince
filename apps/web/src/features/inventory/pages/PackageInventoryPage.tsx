@@ -14,19 +14,11 @@ import { MovementsTable } from '../components/MovementsTable';
 import { AddInventoryDialog } from '../components/AddInventoryDialog';
 import { AdjustInventoryDialog } from '../components/AdjustInventoryDialog';
 import { ReturnInventoryDialog } from '../components/ReturnInventoryDialog';
-import { EditBatchDialog } from '../components/EditBatchDialog';
-import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
-import { useToast } from '../../../components/ui/use-toast';
-import { apiClient } from '../../../lib/api-client';
-import { ApiClientError } from '../../../lib/api-client';
-import { useQueryClient } from '@tanstack/react-query';
 
 const MOVEMENTS_LIMIT = 25;
 
 export function PackageInventoryPage() {
   const { packageId } = useParams<{ packageId: string }>();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
 
   // Dialogs
@@ -37,11 +29,6 @@ export function PackageInventoryPage() {
   const [returnBatch, setReturnBatch] = useState<PackageStockSummary | null>(
     null,
   );
-  const [editBatch, setEditBatch] = useState<PackageStockSummary | null>(null);
-  const [deleteBatch, setDeleteBatch] = useState<PackageStockSummary | null>(
-    null,
-  );
-  const [deleting, setDeleting] = useState(false);
 
   // Queries
   const packageQuery = usePackageInventory(packageId);
@@ -107,8 +94,6 @@ export function PackageInventoryPage() {
           data={pkg.batches}
           onAdjust={(batch) => setAdjustBatch(batch)}
           onReturn={(batch) => setReturnBatch(batch)}
-          onEdit={(batch) => setEditBatch(batch)}
-          onDelete={(batch) => setDeleteBatch(batch)}
         />
       </section>
 
@@ -160,47 +145,6 @@ export function PackageInventoryPage() {
         open={!!returnBatch}
         onOpenChange={(open) => !open && setReturnBatch(null)}
         batch={returnBatch}
-      />
-
-      <EditBatchDialog
-        open={!!editBatch}
-        onOpenChange={(open) => !open && setEditBatch(null)}
-        batch={editBatch}
-        packageId={packageId}
-      />
-
-      <ConfirmDialog
-        open={!!deleteBatch}
-        onOpenChange={(open) => !open && setDeleteBatch(null)}
-        onConfirm={async () => {
-          if (!deleteBatch) return;
-          setDeleting(true);
-          try {
-            await apiClient.delete(`/inventory/batches/${deleteBatch.id}`);
-            toast({ title: 'تم حذف الدفعة' });
-            queryClient.invalidateQueries({ queryKey: ['inventory'] });
-            setDeleteBatch(null);
-          } catch (err) {
-            const message =
-              err instanceof ApiClientError ? err.message : 'حدث خطأ';
-            toast({
-              variant: 'destructive',
-              title: 'فشل الحذف',
-              description: message,
-            });
-          } finally {
-            setDeleting(false);
-          }
-        }}
-        title="حذف الدفعة"
-        description={
-          deleteBatch?.currentQuantity === 0
-            ? 'سيتم حذف هذه الدفعة نهائيًا. لا يمكن التراجع.'
-            : 'لا يمكن حذف دفعة بها كمية متبقية. صفّر الكمية أولاً عبر تعديل الكمية.'
-        }
-        confirmLabel="حذف"
-        variant="destructive"
-        isLoading={deleting}
       />
     </div>
   );

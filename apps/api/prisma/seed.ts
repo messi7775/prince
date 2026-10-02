@@ -3,6 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { hash } from '@node-rs/argon2';
 import {
   DEFAULT_PACKAGES,
+  DEFAULT_EXPENSE_CATEGORIES,
   DEFAULT_SETTINGS,
 } from '@prince-net/config';
 
@@ -34,7 +35,7 @@ async function main(): Promise<void> {
 
     const user = await prisma.user.upsert({
       where: { email: adminEmail },
-      update: { passwordHash },
+      update: {},
       create: {
         email: adminEmail,
         passwordHash,
@@ -61,6 +62,19 @@ async function main(): Promise<void> {
       });
     }
     console.log(`✅ Packages seeded: ${DEFAULT_PACKAGES.length}`);
+
+    // ─── Expense categories ───
+    for (const catName of DEFAULT_EXPENSE_CATEGORIES) {
+      await prisma.expenseCategory.upsert({
+        where: { name: catName },
+        update: {},
+        create: {
+          name: catName,
+          isActive: true,
+        },
+      });
+    }
+    console.log(`✅ Expense categories seeded: ${DEFAULT_EXPENSE_CATEGORIES.length}`);
 
     // ─── Settings (singleton) ───
     // adminEmail: البريد الإداري الظاهر في الفواتير/المخرجات.

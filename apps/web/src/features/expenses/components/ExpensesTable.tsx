@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Printer, Trash2, TrendingDown } from 'lucide-react';
+import { MoreHorizontal, RotateCcw, TrendingDown } from 'lucide-react';
 import type { Expense, ExpenseCategory } from '@prince-net/types';
 import {
   Table,
@@ -24,16 +24,14 @@ interface ExpensesTableProps {
   data: Expense[];
   categories: ExpenseCategory[];
   onEdit: (expense: Expense) => void;
-  onDelete: (expense: Expense) => void;
-  onPrint: (expense: Expense) => void;
+  onReverse: (expense: Expense) => void;
 }
 
 export function ExpensesTable({
   data,
   categories,
   onEdit,
-  onDelete,
-  onPrint,
+  onReverse,
 }: ExpensesTableProps) {
   if (data.length === 0) {
     return (
@@ -54,7 +52,7 @@ export function ExpensesTable({
           <TableRow>
             <TableHead>التاريخ</TableHead>
             <TableHead>التصنيف</TableHead>
-            <TableHead className="hidden sm:table-cell">الوصف</TableHead>
+            <TableHead>الوصف</TableHead>
             <TableHead>المبلغ</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead className="w-12"></TableHead>
@@ -67,13 +65,13 @@ export function ExpensesTable({
 
             return (
               <TableRow key={expense.id}>
-                <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
+                <TableCell className="text-sm whitespace-nowrap">
                   {formatDate(expense.expenseDate)}
                 </TableCell>
                 <TableCell className="text-sm">
                   {category?.name ?? '—'}
                 </TableCell>
-                <TableCell className="hidden sm:table-cell text-sm max-w-[280px] truncate">
+                <TableCell className="text-sm max-w-[280px] truncate">
                   {expense.description}
                 </TableCell>
                 <TableCell className="num font-medium">
@@ -92,23 +90,23 @@ export function ExpensesTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onPrint(expense)}>
-                        <Printer className="me-2 h-4 w-4" />
-                        طباعة
-                      </DropdownMenuItem>
                       {isActive && (
                         <DropdownMenuItem onClick={() => onEdit(expense)}>
-                          <Pencil className="me-2 h-4 w-4" />
                           تعديل
                         </DropdownMenuItem>
                       )}
                       {isActive && (
                         <DropdownMenuItem
+                          onClick={() => onReverse(expense)}
                           className="text-destructive"
-                          onClick={() => onDelete(expense)}
                         >
-                          <Trash2 className="me-2 h-4 w-4" />
-                          حذف
+                          <RotateCcw className="me-2 h-4 w-4" />
+                          عكس
+                        </DropdownMenuItem>
+                      )}
+                      {!isActive && (
+                        <DropdownMenuItem disabled>
+                          لا توجد إجراءات
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>

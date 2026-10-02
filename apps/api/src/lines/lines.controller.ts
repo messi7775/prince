@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -72,45 +71,6 @@ export class LinesController {
     @Req() req: Request,
   ) {
     return this.linesService.update(id, body, user.userId, {
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
-    });
-  }
-
-  @Post(':id/activate')
-  @HttpCode(HttpStatus.OK)
-  async activate(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthUser,
-    @Req() req: Request,
-  ) {
-    return this.linesService.activate(id, user.userId, {
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
-    });
-  }
-
-  @Post(':id/deactivate')
-  @HttpCode(HttpStatus.OK)
-  async deactivate(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthUser,
-    @Req() req: Request,
-  ) {
-    return this.linesService.deactivate(id, user.userId, {
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
-    });
-  }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.OK)
-  async delete(
-    @Param('id') id: string,
-    @CurrentUser() user: AuthUser,
-    @Req() req: Request,
-  ) {
-    return this.linesService.delete(id, user.userId, {
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });

@@ -18,7 +18,6 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
-import { DatePicker } from '../../../components/ui/date-picker';
 
 interface LineFormDialogProps {
   open: boolean;
@@ -26,6 +25,60 @@ interface LineFormDialogProps {
   onSubmit: (data: CreateLineInput) => Promise<void>;
   initialData?: Line | null;
   isSubmitting: boolean;
+}
+
+/**
+ * يحول Date إلى القيمة المطلوبة لـ input[type="date"].
+ *
+ * مثال:
+ * Date -> "2026-10-01"
+ *
+ * يتم استخدام الوقت المحلي لتجنب مشاكل اختلاف اليوم بسبب UTC.
+ */
+function formatDateForInput(date: Date): string {
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * يحول قيمة input[type="date"] إلى Date محلي.
+ *
+ * نستخدم منتصف اليوم بدل:
+ * new Date("2026-10-01")
+ *
+ * لأن الصيغة السابقة قد تُفسر كـ UTC وتسبب انزياحًا في التاريخ.
+ */
+function parseDateFromInput(value: string): Date {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+
+  if (!match) {
+    return new Date();
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day) ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    return new Date();
+  }
+
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
 }
 
 /**
@@ -241,9 +294,25 @@ export function LineFormDialog({
               name="subscriptionDate"
               control={control}
               render={({ field }) => (
-                <DatePicker
-                  value={field.value ? toDate(field.value) : undefined}
-                  onChange={(date) => field.onChange(date ?? new Date())}
+                <Input
+                  id="subscriptionDate"
+                  type="date"
+                  value={
+                    field.value
+                      ? formatDateForInput(toDate(field.value))
+                      : ''
+                  }
+                  onChange={(event) => {
+                    const value = event.target.value;
+
+                    if (!value) {
+                      field.onChange(new Date());
+                      return;
+                    }
+
+                    field.onChange(parseDateFromInput(value));
+                  }}
+                  onBlur={field.onBlur}
                   disabled={isSubmitting}
                 />
               )}

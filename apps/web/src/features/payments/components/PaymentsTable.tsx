@@ -1,4 +1,4 @@
-import { CreditCard, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { CreditCard, RotateCcw } from 'lucide-react';
 import type { Payment } from '@prince-net/types';
 import {
   Table,
@@ -10,12 +10,6 @@ import {
 } from '../../../components/ui/table';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../../../components/ui/dropdown-menu';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { Pagination } from '../../../components/ui/pagination';
 import { formatMoney } from '../../../lib/currency';
@@ -26,8 +20,7 @@ interface PaymentsTableProps {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  onEdit: (payment: Payment) => void;
-  onDelete: (payment: Payment) => void;
+  onReverse: (payment: Payment) => void;
 }
 
 export function PaymentsTable({
@@ -35,8 +28,7 @@ export function PaymentsTable({
   page,
   totalPages,
   onPageChange,
-  onEdit,
-  onDelete,
+  onReverse,
 }: PaymentsTableProps) {
   if (data.length === 0) {
     return (
@@ -57,8 +49,8 @@ export function PaymentsTable({
             <TableHead>التاريخ</TableHead>
             <TableHead>المبلغ</TableHead>
             <TableHead>الحالة</TableHead>
-            <TableHead className="hidden sm:table-cell">ملاحظات</TableHead>
-            <TableHead className="w-12"></TableHead>
+            <TableHead>ملاحظات</TableHead>
+            <TableHead className="w-24"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -67,7 +59,7 @@ export function PaymentsTable({
 
             return (
               <TableRow key={payment.id}>
-                <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
+                <TableCell className="text-sm whitespace-nowrap">
                   {formatDateTime(payment.paymentDate)}
                 </TableCell>
                 <TableCell className="num font-medium">
@@ -78,31 +70,22 @@ export function PaymentsTable({
                     {isActive ? 'نشطة' : 'معكوسة'}
                   </Badge>
                 </TableCell>
-                <TableCell className="hidden sm:table-cell text-sm text-muted-foreground max-w-[240px] truncate">
-                  {payment.notes ?? '—'}
+                <TableCell className="text-sm text-muted-foreground max-w-[240px] truncate">
+                  {payment.reversalReason
+                    ? `معكوسة: ${payment.reversalReason}`
+                    : (payment.notes ?? '—')}
                 </TableCell>
                 <TableCell>
                   {isActive && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(payment)}>
-                          <Pencil className="me-2 h-4 w-4" />
-                          تعديل
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => onDelete(payment)}
-                        >
-                          <Trash2 className="me-2 h-4 w-4" />
-                          حذف
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onReverse(payment)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <RotateCcw className="me-1 h-3.5 w-3.5" />
+                      عكس
+                    </Button>
                   )}
                 </TableCell>
               </TableRow>

@@ -183,64 +183,6 @@ export class DistributorsService {
     return this.findById(id);
   }
 
-  async activate(
-    id: string,
-    userId: string,
-    req: { ip?: string; userAgent?: string },
-  ): Promise<Distributor> {
-    return this.setStatus(id, 'ACTIVE', userId, req);
-  }
-
-  async deactivate(
-    id: string,
-    userId: string,
-    req: { ip?: string; userAgent?: string },
-  ): Promise<Distributor> {
-    return this.setStatus(id, 'INACTIVE', userId, req);
-  }
-
-  private async setStatus(
-    id: string,
-    status: 'ACTIVE' | 'INACTIVE',
-    userId: string,
-    req: { ip?: string; userAgent?: string },
-  ): Promise<Distributor> {
-    const existing = await this.prisma.distributor.findUnique({
-      where: { id },
-    });
-    if (!existing) {
-      throw new NotFoundException({
-        message: 'الموزع غير موجود',
-        code: 'DISTRIBUTOR_NOT_FOUND',
-      });
-    }
-
-    if (existing.status === status) {
-      return this.findById(id);
-    }
-
-    await this.prisma.distributor.update({
-      where: { id },
-      data: { status },
-    });
-
-    await this.auditService.log({
-      userId,
-      action:
-        status === 'ACTIVE'
-          ? 'DISTRIBUTOR_ACTIVATED'
-          : 'DISTRIBUTOR_DEACTIVATED',
-      entityType: 'Distributor',
-      entityId: id,
-      oldValues: { status: existing.status },
-      newValues: { status },
-      ipAddress: req.ip ?? null,
-      userAgent: req.userAgent ?? null,
-    });
-
-    return this.findById(id);
-  }
-
   // ───────────────────────────────────────────────────────────
   // getBalance — عبر العلاقات الفعلية
   // ───────────────────────────────────────────────────────────
@@ -300,40 +242,25 @@ export class DistributorsService {
         skip,
         take,
         orderBy: { saleDate: order },
-        include: {
-          payments: {
-            where: { status: 'ACTIVE' },
-            select: { amount: true },
-          },
-        },
       }),
       this.prisma.sale.count({ where }),
     ]);
 
-    const data: Sale[] = rows.map((row) => {
-      const paidAmount = row.payments.reduce(
-        (sum, p) => sum.plus(p.amount),
-        new Prisma.Decimal(0),
-      );
-      const remainingAmount = row.totalAmount.minus(paidAmount);
-      return {
-        id: row.id,
-        invoiceNumber: row.invoiceNumber,
-        distributorId: row.distributorId,
-        totalAmount: toMoneyStringRequired(row.totalAmount),
-        status: row.status,
-        saleDate: row.saleDate.toISOString(),
-        notes: row.notes,
-        createdBy: row.createdBy,
-        createdAt: row.createdAt.toISOString(),
-        updatedAt: row.updatedAt.toISOString(),
-        cancelledAt: row.cancelledAt ? row.cancelledAt.toISOString() : null,
-        cancelledBy: row.cancelledBy,
-        cancellationReason: row.cancellationReason,
-        paidAmount: toMoneyStringRequired(paidAmount),
-        remainingAmount: toMoneyStringRequired(remainingAmount),
-      };
-    });
+    const data: Sale[] = rows.map((row) => ({
+      id: row.id,
+      invoiceNumber: row.invoiceNumber,
+      distributorId: row.distributorId,
+      totalAmount: toMoneyStringRequired(row.totalAmount),
+      status: row.status,
+      saleDate: row.saleDate.toISOString(),
+      notes: row.notes,
+      createdBy: row.createdBy,
+      createdAt: row.createdAt.toISOString(),
+      updatedAt: row.updatedAt.toISOString(),
+      cancelledAt: row.cancelledAt ? row.cancelledAt.toISOString() : null,
+      cancelledBy: row.cancelledBy,
+      cancellationReason: row.cancellationReason,
+    }));
 
     const meta: PaginationMeta = buildPaginationMeta(total, page, limit);
     return { success: true, data, meta };
