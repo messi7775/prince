@@ -172,7 +172,7 @@ export function SaleDetailsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-6">
       <div>
         <Button variant="ghost" size="sm" asChild className="mb-3 -ms-2">
           <Link to="/sales">
