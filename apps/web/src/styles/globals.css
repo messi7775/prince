@@ -126,6 +126,7 @@
   .num {
     direction: ltr;
     unicode-bidi: embed;
+    text-align: end;
   }
 
   /* Hide scrollbar utility for horizontal scroll areas */
