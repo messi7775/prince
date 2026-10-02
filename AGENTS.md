@@ -59,6 +59,10 @@ docker compose -f docker-compose.base44.yml up -d
 - **Seed password update**: Changed `update: {}` to `update: { passwordHash }` in the admin user upsert so the password is updated when the user already exists.
 - **Admin email config**: Moved `ADMIN_EMAIL` from compose `environment:` to `.env.base44-defaults` (set to `ibrabra651@gmail.com`) so it can be overridden via `/run/base44/app.env`.
 
+## Fixes applied during startup investigation
+
+- **Missing `.env.base44-defaults`**: The compose `env_file` referenced `.env.base44-defaults` but the file was never committed — a duplicate `.gitignore` section (`.env.*` near the bottom) re-ignored it, overriding the `!.env.base44-defaults` exception near the top. Added `!.env.base44-defaults` to the bottom section so the file is tracked, then committed the defaults file with placeholder values for `JWT_SECRET`, `CSRF_SECRET`, `ADMIN_PASSWORD`, and `ADMIN_EMAIL` (real secrets in `/run/base44/app.env` override them).
+
 ## Notes
 
 - Shared packages (`types`, `validation`, `config`) must be built before API starts (CommonJS `dist/`); web imports them via Vite aliases from source.
