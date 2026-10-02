@@ -1,4 +1,4 @@
-import { MoreHorizontal, RotateCcw, Wallet } from 'lucide-react';
+import { MoreHorizontal, Pencil, Printer, Trash2, Wallet } from 'lucide-react';
 import type { OwnerWithdrawal } from '@prince-net/types';
 import {
   Table,
@@ -22,12 +22,16 @@ import { formatDate } from '../../../lib/format';
 
 interface OwnerWithdrawalsTableProps {
   data: OwnerWithdrawal[];
-  onReverse: (withdrawal: OwnerWithdrawal) => void;
+  onEdit: (withdrawal: OwnerWithdrawal) => void;
+  onDelete: (withdrawal: OwnerWithdrawal) => void;
+  onPrint: (withdrawal: OwnerWithdrawal) => void;
 }
 
 export function OwnerWithdrawalsTable({
   data,
-  onReverse,
+  onEdit,
+  onDelete,
+  onPrint,
 }: OwnerWithdrawalsTableProps) {
   if (data.length === 0) {
     return (
@@ -48,7 +52,7 @@ export function OwnerWithdrawalsTable({
             <TableHead>السبب</TableHead>
             <TableHead>المبلغ</TableHead>
             <TableHead>الحالة</TableHead>
-            <TableHead>ملاحظات</TableHead>
+            <TableHead className="hidden md:table-cell">ملاحظات</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>
         </TableHeader>
@@ -58,10 +62,10 @@ export function OwnerWithdrawalsTable({
 
             return (
               <TableRow key={w.id}>
-                <TableCell className="text-sm whitespace-nowrap">
+                <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
                   {formatDate(w.withdrawalDate)}
                 </TableCell>
-                <TableCell className="font-medium max-w-[240px] truncate">
+                <TableCell className="font-medium sm:max-w-[240px] sm:truncate break-words">
                   {w.reason}
                 </TableCell>
                 <TableCell className="num font-medium">
@@ -72,10 +76,8 @@ export function OwnerWithdrawalsTable({
                     {isActive ? 'نشط' : 'معكوس'}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                  {w.reversalReason
-                    ? `معكوس: ${w.reversalReason}`
-                    : (w.notes ?? '—')}
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[200px] truncate">
+                  {w.notes ?? '—'}
                 </TableCell>
                 <TableCell>
                   <DropdownMenu>
@@ -85,17 +87,23 @@ export function OwnerWithdrawalsTable({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {isActive ? (
-                        <DropdownMenuItem
-                          onClick={() => onReverse(w)}
-                          className="text-destructive"
-                        >
-                          <RotateCcw className="me-2 h-4 w-4" />
-                          عكس
+                      <DropdownMenuItem onClick={() => onPrint(w)}>
+                        <Printer className="me-2 h-4 w-4" />
+                        طباعة
+                      </DropdownMenuItem>
+                      {isActive && (
+                        <DropdownMenuItem onClick={() => onEdit(w)}>
+                          <Pencil className="me-2 h-4 w-4" />
+                          تعديل
                         </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem disabled>
-                          لا توجد إجراءات
+                      )}
+                      {isActive && (
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => onDelete(w)}
+                        >
+                          <Trash2 className="me-2 h-4 w-4" />
+                          حذف
                         </DropdownMenuItem>
                       )}
                     </DropdownMenuContent>

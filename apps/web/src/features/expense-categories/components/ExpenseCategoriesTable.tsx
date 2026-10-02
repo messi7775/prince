@@ -21,6 +21,7 @@ import { EmptyState } from '../../../components/ui/empty-state';
 interface ExpenseCategoriesTableProps {
   data: ExpenseCategory[];
   onEdit: (category: ExpenseCategory) => void;
+  onDelete: (category: ExpenseCategory) => void;
   onToggleStatus: (category: ExpenseCategory) => void;
   isUpdating: boolean;
 }
@@ -28,6 +29,7 @@ interface ExpenseCategoriesTableProps {
 export function ExpenseCategoriesTable({
   data,
   onEdit,
+  onDelete,
   onToggleStatus,
   isUpdating,
 }: ExpenseCategoriesTableProps) {
@@ -47,7 +49,7 @@ export function ExpenseCategoriesTable({
         <TableHeader>
           <TableRow>
             <TableHead>الاسم</TableHead>
-            <TableHead>الوصف</TableHead>
+            <TableHead className="hidden sm:table-cell">الوصف</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>
@@ -56,7 +58,7 @@ export function ExpenseCategoriesTable({
           {data.map((category) => (
             <TableRow key={category.id}>
               <TableCell className="font-medium">{category.name}</TableCell>
-              <TableCell className="text-sm text-muted-foreground max-w-[400px] truncate">
+              <TableCell className="hidden sm:table-cell text-sm text-muted-foreground max-w-[400px] truncate">
                 {category.description ?? '—'}
               </TableCell>
               <TableCell>
@@ -90,6 +92,12 @@ export function ExpenseCategoriesTable({
                       }
                     >
                       {category.isActive ? 'تعطيل' : 'تفعيل'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onDelete(category)}
+                      className="text-destructive"
+                    >
+                      حذف
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createOwnerWithdrawalSchema,
   type CreateOwnerWithdrawalInput,
 } from '@prince-net/validation';
+import type { OwnerWithdrawal } from '@prince-net/types';
 import {
   Dialog,
   DialogContent,
@@ -17,12 +18,14 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
+import { DatePicker } from '../../../components/ui/date-picker';
 
 interface OwnerWithdrawalFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: CreateOwnerWithdrawalInput) => Promise<void>;
   isSubmitting: boolean;
+  initialData?: OwnerWithdrawal | null;
 }
 
 export function OwnerWithdrawalFormDialog({
@@ -30,32 +33,47 @@ export function OwnerWithdrawalFormDialog({
   onOpenChange,
   onSubmit,
   isSubmitting,
+  initialData,
 }: OwnerWithdrawalFormDialogProps) {
+  const isEdit = !!initialData;
+
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<CreateOwnerWithdrawalInput>({
     resolver: zodResolver(createOwnerWithdrawalSchema),
     defaultValues: {
       amount: '',
       reason: '',
-      withdrawalDate: undefined,
+      withdrawalDate: new Date(),
       notes: '',
     },
   });
 
   useEffect(() => {
     if (open) {
-      reset({
-        amount: '',
-        reason: '',
-        withdrawalDate: undefined,
-        notes: '',
-      });
+      if (initialData) {
+        reset({
+          amount: initialData.amount,
+          reason: initialData.reason,
+          withdrawalDate: initialData.withdrawalDate
+            ? new Date(initialData.withdrawalDate)
+            : new Date(),
+          notes: initialData.notes ?? '',
+        });
+      } else {
+        reset({
+          amount: '',
+          reason: '',
+          withdrawalDate: new Date(),
+          notes: '',
+        });
+      }
     }
-  }, [open, reset]);
+  }, [open, initialData, reset]);
 
   const handleFormSubmit = async (data: CreateOwnerWithdrawalInput) => {
     const cleaned: CreateOwnerWithdrawalInput = {
@@ -73,9 +91,9 @@ export function OwnerWithdrawalFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>سحب جديد</DialogTitle>
+          <DialogTitle>{isEdit ? 'تعديل السحب' : 'سحب جديد'}</DialogTitle>
           <DialogDescription>
-            سجّل عملية سحب من الصندوق
+            {isEdit ? 'عدّل بيانات السحب' : 'سجّل عملية سحب من الصندوق'}
           </DialogDescription>
         </DialogHeader>
 
@@ -118,14 +136,17 @@ export function OwnerWithdrawalFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="owDate">التاريخ (اختياري)</Label>
-            <Input
-              id="owDate"
-              type="date"
-              {...register('withdrawalDate', {
-                setValueAs: (v) => (v ? new Date(v) : undefined),
-              })}
-              disabled={isSubmitting}
+            <Label htmlFor="owDate">التاريخ</Label>
+            <Controller
+              name="withdrawalDate"
+              control={control}
+              render={({ field }) => (
+                <DatePicker
+                  value={field.value ? new Date(field.value) : undefined}
+                  onChange={(date) => field.onChange(date ?? undefined)}
+                  disabled={isSubmitting}
+                />
+              )}
             />
           </div>
 
@@ -155,7 +176,11 @@ export function OwnerWithdrawalFormDialog({
             form="owner-withdrawal-form"
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'جارٍ الحفظ...' : 'سحب'}
+            {isSubmitting
+              ? 'جارٍ الحفظ...'
+              : isEdit
+                ? 'حفظ التعديلات'
+                : 'سحب'}
           </Button>
         </DialogFooter>
       </DialogContent>

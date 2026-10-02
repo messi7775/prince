@@ -10,8 +10,6 @@ import { PageHeader } from '../../../components/layout/PageHeader';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { StatCard } from '../components/StatCard';
-import { SalesChart } from '../components/SalesChart';
-import { CashChart } from '../components/CashChart';
 import { TopPackages } from '../components/TopPackages';
 import { DistributorDebts } from '../components/DistributorDebts';
 import { LowStockAlerts } from '../components/LowStockAlerts';
@@ -44,7 +42,7 @@ export function DashboardPage() {
       />
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="مبيعات اليوم"
           value={formatMoney(data.todaySales)}
@@ -82,14 +80,8 @@ export function DashboardPage() {
         />
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <SalesChart data={data.salesChart} />
-        <CashChart data={data.cashChart} />
-      </div>
-
       {/* Lists */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
         <TopPackages data={data.topPackages} />
         <DistributorDebts data={data.distributorDebts} />
         <LowStockAlerts data={data.lowStockAlerts} />

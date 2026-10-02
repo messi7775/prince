@@ -10,6 +10,7 @@ import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { useAuditLog } from '../hooks/useAuditLog';
 import { getAuditActionLabel } from '../../../lib/audit-actions';
+import { ENTITY_TYPE_LABELS } from './AuditLogsTable';
 import { formatDateTime } from '../../../lib/format';
 
 interface AuditLogDetailsDialogProps {
@@ -54,26 +55,28 @@ export function AuditLogDetailsDialog({
             {/* Metadata */}
             <dl className="grid gap-3 sm:grid-cols-2 text-sm">
               <div>
-                <dt className="text-xs text-muted-foreground">التاريخ</dt>
+                <dt className="text-xs text-muted-foreground">التاريخ والوقت</dt>
                 <dd className="mt-1">{formatDateTime(data.createdAt)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">IP</dt>
-                <dd className="mt-1 num">{data.ipAddress ?? '—'}</dd>
+                <dt className="text-xs text-muted-foreground">المستخدم</dt>
+                <dd className="mt-1">{data.userEmail ?? '—'}</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">نوع الكيان</dt>
-                <dd className="mt-1">{data.entityType}</dd>
+                <dt className="text-xs text-muted-foreground">نوع السجل</dt>
+                <dd className="mt-1">
+                  {ENTITY_TYPE_LABELS[data.entityType] ?? data.entityType}
+                </dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">معرّف الكيان</dt>
+                <dt className="text-xs text-muted-foreground">معرّف السجل</dt>
                 <dd className="mt-1 num text-xs">
                   {data.entityId ?? '—'}
                 </dd>
               </div>
-              <div className="sm:col-span-2">
-                <dt className="text-xs text-muted-foreground">User ID</dt>
-                <dd className="mt-1 num text-xs">{data.userId}</dd>
+              <div>
+                <dt className="text-xs text-muted-foreground">IP</dt>
+                <dd className="mt-1 num">{data.ipAddress ?? '—'}</dd>
               </div>
               {data.userAgent && (
                 <div className="sm:col-span-2">

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createLinePaymentSchema,
@@ -17,6 +17,7 @@ import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
+import { DatePicker } from '../../../components/ui/date-picker';
 import { useToast } from '../../../components/ui/use-toast';
 import { useCreateLinePayment } from '../hooks/useCreateLinePayment';
 import { formatMoney } from '../../../lib/currency';
@@ -40,13 +41,13 @@ export function CreateLinePaymentDialog({
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<CreateLinePaymentInput>({
     resolver: zodResolver(createLinePaymentSchema),
     defaultValues: {
       amount: '',
-      period: '',
-      paymentDate: undefined,
+      paymentDate: new Date(),
       notes: '',
     },
   });
@@ -55,8 +56,7 @@ export function CreateLinePaymentDialog({
     if (open) {
       reset({
         amount: '',
-        period: '',
-        paymentDate: undefined,
+        paymentDate: new Date(),
         notes: '',
       });
     }
@@ -66,10 +66,7 @@ export function CreateLinePaymentDialog({
     try {
       const cleaned: CreateLinePaymentInput = {
         amount: data.amount,
-        period: data.period.trim(),
-        paymentDate: data.paymentDate
-          ? new Date(data.paymentDate)
-          : undefined,
+        paymentDate: new Date(data.paymentDate),
         notes: data.notes?.trim() ? data.notes.trim() : null,
       };
 
@@ -127,31 +124,24 @@ export function CreateLinePaymentDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lpayPeriod">الفترة</Label>
-              <Input
-                id="lpayPeriod"
-                placeholder="مثال: 2026-09"
-                {...register('period')}
-                disabled={mutation.isPending}
+              <Label htmlFor="lpayDate">التاريخ</Label>
+              <Controller
+                name="paymentDate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    value={field.value ? new Date(field.value) : undefined}
+                    onChange={(date) => field.onChange(date ?? new Date())}
+                    disabled={mutation.isPending}
+                  />
+                )}
               />
-              {errors.period && (
+              {errors.paymentDate && (
                 <p className="text-xs text-destructive">
-                  {errors.period.message}
+                  {errors.paymentDate.message}
                 </p>
               )}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="lpayDate">التاريخ (اختياري)</Label>
-            <Input
-              id="lpayDate"
-              type="date"
-              {...register('paymentDate', {
-                setValueAs: (v) => (v ? new Date(v) : undefined),
-              })}
-              disabled={mutation.isPending}
-            />
           </div>
 
           <div className="space-y-2">

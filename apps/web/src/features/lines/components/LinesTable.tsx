@@ -23,9 +23,16 @@ import { formatMoney } from '../../../lib/currency';
 interface LinesTableProps {
   data: Line[];
   onEdit: (line: Line) => void;
+  onToggleStatus: (line: Line) => void;
+  isUpdating: boolean;
 }
 
-export function LinesTable({ data, onEdit }: LinesTableProps) {
+export function LinesTable({
+  data,
+  onEdit,
+  onToggleStatus,
+  isUpdating,
+}: LinesTableProps) {
   if (data.length === 0) {
     return (
       <EmptyState
@@ -42,8 +49,8 @@ export function LinesTable({ data, onEdit }: LinesTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead>الاسم</TableHead>
-            <TableHead>المزود</TableHead>
-            <TableHead>المعرّف</TableHead>
+            <TableHead className="hidden sm:table-cell">المزود</TableHead>
+            <TableHead className="hidden md:table-cell">المعرّف</TableHead>
             <TableHead>التكلفة</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead className="w-12"></TableHead>
@@ -57,8 +64,8 @@ export function LinesTable({ data, onEdit }: LinesTableProps) {
                   {line.name}
                 </Link>
               </TableCell>
-              <TableCell className="text-sm">{line.provider}</TableCell>
-              <TableCell className="num text-sm">{line.identifier}</TableCell>
+              <TableCell className="hidden sm:table-cell text-sm">{line.provider}</TableCell>
+              <TableCell className="hidden md:table-cell num text-sm">{line.identifier}</TableCell>
               <TableCell className="num">
                 {formatMoney(line.cost)}
               </TableCell>
@@ -72,7 +79,7 @@ export function LinesTable({ data, onEdit }: LinesTableProps) {
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" disabled={isUpdating}>
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -82,6 +89,16 @@ export function LinesTable({ data, onEdit }: LinesTableProps) {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onEdit(line)}>
                       تعديل
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onToggleStatus(line)}
+                      className={
+                        line.status === 'ACTIVE'
+                          ? 'text-destructive'
+                          : 'text-green-600'
+                      }
+                    >
+                      {line.status === 'ACTIVE' ? 'تعطيل' : 'تفعيل'}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

@@ -1,14 +1,5 @@
 import { useState } from 'react';
 import { Banknote, CreditCard, ShoppingCart } from 'lucide-react';
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { StatCard } from '../../dashboard/components/StatCard';
@@ -78,23 +69,10 @@ export function SalesReportTab({ dateFrom, dateTo }: SalesReportTabProps) {
     );
   }
 
-  // Chart data: تجميع rows حسب التاريخ — للعرض فقط
-  const chartData = (() => {
-    const byDate = new Map<string, number>();
-    for (const row of data.rows) {
-      const day = row.date.slice(0, 10);
-      const current = byDate.get(day) ?? 0;
-      byDate.set(day, current + Number(row.total));
-    }
-    return Array.from(byDate.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, total]) => ({ date: date.slice(5), total }));
-  })();
-
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-3">
         <div className="space-y-1">
           <Label className="text-xs">الموزع</Label>
           <Select
@@ -156,7 +134,7 @@ export function SalesReportTab({ dateFrom, dateTo }: SalesReportTabProps) {
       </div>
 
       {/* Summary */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="عدد الفواتير"
           value={String(data.summary.salesCount)}
@@ -181,54 +159,6 @@ export function SalesReportTab({ dateFrom, dateTo }: SalesReportTabProps) {
         />
       </div>
 
-      {/* Chart */}
-      {chartData.length > 0 && (
-        <div className="rounded-md border bg-card p-4">
-          <h3 className="text-sm font-medium mb-3">المبيعات اليومية</h3>
-          <div className="h-64" dir="ltr">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient
-                    id="salesReportGradient"
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop
-                      offset="5%"
-                      stopColor="hsl(var(--primary))"
-                      stopOpacity={0.3}
-                    />
-                    <stop
-                      offset="95%"
-                      stopColor="hsl(var(--primary))"
-                      stopOpacity={0}
-                    />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip
-                  formatter={(value: number) => formatMoney(String(value))}
-                  labelStyle={{ direction: 'rtl' }}
-                  contentStyle={{ direction: 'rtl' }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="total"
-                  stroke="hsl(var(--primary))"
-                  fill="url(#salesReportGradient)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
       {/* Table */}
       <div className="rounded-md border bg-card">
         {data.rows.length === 0 ? (
@@ -242,28 +172,28 @@ export function SalesReportTab({ dateFrom, dateTo }: SalesReportTabProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>التاريخ</TableHead>
+                <TableHead className="hidden sm:table-cell">التاريخ</TableHead>
                 <TableHead>رقم الفاتورة</TableHead>
-                <TableHead>الموزع</TableHead>
-                <TableHead>الباقة</TableHead>
-                <TableHead>الكمية</TableHead>
+                <TableHead className="hidden md:table-cell">الموزع</TableHead>
+                <TableHead className="hidden sm:table-cell">الباقة</TableHead>
+                <TableHead className="hidden md:table-cell">الكمية</TableHead>
                 <TableHead>الإجمالي</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.rows.map((row, i) => (
                 <TableRow key={`${row.invoiceNumber}-${i}`}>
-                  <TableCell className="text-sm whitespace-nowrap">
+                  <TableCell className="hidden sm:table-cell text-sm whitespace-nowrap">
                     {formatDate(row.date)}
                   </TableCell>
                   <TableCell className="num text-sm font-medium">
                     {row.invoiceNumber}
                   </TableCell>
-                  <TableCell className="text-sm">
+                  <TableCell className="hidden md:table-cell text-sm">
                     {row.distributorName}
                   </TableCell>
-                  <TableCell className="text-sm">{row.packageName}</TableCell>
-                  <TableCell className="num">{row.quantity}</TableCell>
+                  <TableCell className="hidden sm:table-cell text-sm">{row.packageName}</TableCell>
+                  <TableCell className="hidden md:table-cell num">{row.quantity}</TableCell>
                   <TableCell className="num font-medium">
                     {formatMoney(row.total)}
                   </TableCell>

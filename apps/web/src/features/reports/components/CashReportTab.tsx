@@ -1,14 +1,4 @@
 import { ArrowDownCircle, ArrowUpCircle, Wallet } from 'lucide-react';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { StatCard } from '../../dashboard/components/StatCard';
@@ -25,6 +15,7 @@ import { Badge } from '../../../components/ui/badge';
 import { useCashReport } from '../hooks/useCashReport';
 import { formatMoney } from '../../../lib/currency';
 import { formatDateTime } from '../../../lib/format';
+import { cashSourceLabel } from '../../../lib/cash-source-labels';
 import { cn } from '../../../lib/utils';
 
 interface CashReportTabProps {
@@ -49,17 +40,10 @@ export function CashReportTab({ dateFrom, dateTo }: CashReportTabProps) {
     );
   }
 
-  const chartData = [
-    { name: 'افتتاحي', value: Number(data.summary.opening) },
-    { name: 'وارد', value: Number(data.summary.totalIn) },
-    { name: 'صادر', value: Number(data.summary.totalOut) },
-    { name: 'ختامي', value: Number(data.summary.closing) },
-  ];
-
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="الرصيد الافتتاحي"
           value={formatMoney(data.summary.opening)}
@@ -84,31 +68,6 @@ export function CashReportTab({ dateFrom, dateTo }: CashReportTabProps) {
         />
       </div>
 
-      {/* Chart */}
-      <div className="rounded-md border bg-card p-4">
-        <h3 className="text-sm font-medium mb-3">ملخص الحركة</h3>
-        <div className="h-64" dir="ltr">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip
-                formatter={(value: number) => formatMoney(String(value))}
-                contentStyle={{ direction: 'rtl' }}
-              />
-              <Legend wrapperStyle={{ direction: 'rtl', fontSize: '12px' }} />
-              <Bar
-                dataKey="value"
-                fill="hsl(var(--primary))"
-                name="المبلغ"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
       {/* Table */}
       <div className="rounded-md border bg-card">
         {data.rows.length === 0 ? (
@@ -124,8 +83,8 @@ export function CashReportTab({ dateFrom, dateTo }: CashReportTabProps) {
               <TableRow>
                 <TableHead>التاريخ</TableHead>
                 <TableHead>الاتجاه</TableHead>
-                <TableHead>المصدر</TableHead>
-                <TableHead>الوصف</TableHead>
+                <TableHead className="hidden sm:table-cell">المصدر</TableHead>
+                <TableHead className="hidden md:table-cell">الوصف</TableHead>
                 <TableHead>المبلغ</TableHead>
               </TableRow>
             </TableHeader>
@@ -142,8 +101,8 @@ export function CashReportTab({ dateFrom, dateTo }: CashReportTabProps) {
                       {row.direction === 'IN' ? 'وارد' : 'صادر'}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm">{row.sourceType}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-[240px] truncate">
+                  <TableCell className="hidden sm:table-cell text-sm">{cashSourceLabel(row.sourceType)}</TableCell>
+                  <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[240px] truncate">
                     {row.description || '—'}
                   </TableCell>
                   <TableCell

@@ -25,7 +25,7 @@ export function RecentTransactions({ data }: RecentTransactionsProps) {
             className="border-0 bg-transparent p-4"
           />
         ) : (
-          <ul className="space-y-3">
+          <ul className="space-y-2 sm:space-y-3">
             {data.map((tx) => (
               <li
                 key={tx.id}

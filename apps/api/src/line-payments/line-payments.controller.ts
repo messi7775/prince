@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -12,9 +14,11 @@ import {
 import type { Request } from 'express';
 import {
   createLinePaymentSchema,
+  updateLinePaymentSchema,
   reverseLinePaymentSchema,
   paginationSchema,
   type CreateLinePaymentInput,
+  type UpdateLinePaymentInput,
   type ReverseLinePaymentInput,
   type PaginationInput,
 } from '@prince-net/validation';
@@ -46,6 +50,33 @@ export class LinePaymentsController {
     @Req() req: Request,
   ) {
     return this.linePaymentsService.create(lineId, body, user.userId, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
+
+  @Patch('line-payments/:id')
+  async update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateLinePaymentSchema))
+    body: UpdateLinePaymentInput,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.linePaymentsService.update(id, body, user.userId, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
+
+  @Delete('line-payments/:id')
+  @HttpCode(HttpStatus.OK)
+  async delete(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.linePaymentsService.delete(id, user.userId, {
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });

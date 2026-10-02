@@ -1,10 +1,12 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   Req,
@@ -12,9 +14,11 @@ import {
 import type { Request } from 'express';
 import {
   createOwnerWithdrawalSchema,
+  updateOwnerWithdrawalSchema,
   reverseOwnerWithdrawalSchema,
   paginationSchema,
   type CreateOwnerWithdrawalInput,
+  type UpdateOwnerWithdrawalInput,
   type ReverseOwnerWithdrawalInput,
   type PaginationInput,
 } from '@prince-net/validation';
@@ -66,6 +70,33 @@ export class OwnerWithdrawalsController {
     @Req() req: Request,
   ) {
     return this.ownerWithdrawalsService.create(body, user.userId, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
+
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(updateOwnerWithdrawalSchema))
+    body: UpdateOwnerWithdrawalInput,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.ownerWithdrawalsService.update(id, body, user.userId, {
+      ip: req.ip,
+      userAgent: req.get('user-agent'),
+    });
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async delete(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthUser,
+    @Req() req: Request,
+  ) {
+    return this.ownerWithdrawalsService.delete(id, user.userId, {
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });

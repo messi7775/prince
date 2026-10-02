@@ -13,6 +13,7 @@ import { Button } from '../../../components/ui/button';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { Pagination } from '../../../components/ui/pagination';
 import { formatDateTime } from '../../../lib/format';
+import { getAuditActionLabel, AUDIT_ACTIONS } from '../../../lib/audit-actions';
 
 interface AuditLogsTableProps {
   data: AuditLog[];
@@ -22,35 +23,26 @@ interface AuditLogsTableProps {
   onViewDetails: (log: AuditLog) => void;
 }
 
-const ACTION_LABELS: Record<AuditAction, string> = {
-  LOGIN: 'تسجيل دخول',
-  LOGIN_FAILED: 'فشل تسجيل دخول',
-  PACKAGE_CREATED: 'إنشاء باقة',
-  PACKAGE_UPDATED: 'تعديل باقة',
-  INVENTORY_ADDED: 'إضافة مخزون',
-  INVENTORY_ADJUSTED: 'تعديل مخزون',
-  INVENTORY_RETURNED: 'إعادة مخزون',
-  DISTRIBUTOR_CREATED: 'إضافة موزع',
-  DISTRIBUTOR_UPDATED: 'تعديل موزع',
-  SALE_CREATED: 'إنشاء بيع',
-  SALE_CANCELLED: 'إلغاء بيع',
-  PAYMENT_CREATED: 'إنشاء دفعة',
-  PAYMENT_REVERSED: 'عكس دفعة',
-  LINE_CREATED: 'إضافة خط',
-  LINE_UPDATED: 'تعديل خط',
-  LINE_PAYMENT_CREATED: 'إنشاء دفعة خط',
-  LINE_PAYMENT_REVERSED: 'عكس دفعة خط',
-  EXPENSE_CREATED: 'إنشاء مصروف',
-  EXPENSE_UPDATED: 'تعديل مصروف',
-  EXPENSE_REVERSED: 'عكس مصروف',
-  OWNER_WITHDRAWAL_CREATED: 'سحب المالك',
-  OWNER_WITHDRAWAL_REVERSED: 'عكس سحب المالك',
-  CASH_MANUAL_IN: 'إيداع يدوي',
-  CASH_MANUAL_OUT: 'سحب يدوي',
-  BACKUP_CREATED: 'إنشاء نسخة احتياطية',
-  BACKUP_RESTORED: 'استعادة نسخة',
-  SETTINGS_UPDATED: 'تعديل الإعدادات',
-  PASSWORD_CHANGED: 'تغيير كلمة المرور',
+const ACTION_LABELS: Record<AuditAction, string> = Object.fromEntries(
+  AUDIT_ACTIONS.map((a) => [a.value, a.label]),
+) as Record<AuditAction, string>;
+
+const ENTITY_TYPE_LABELS: Record<string, string> = {
+  Sale: 'مبيعة',
+  Payment: 'دفعة',
+  Package: 'باقة',
+  PackageStock: 'دفعة مخزون',
+  InventoryMovement: 'حركة مخزون',
+  Distributor: 'موزع',
+  Line: 'خط',
+  LinePayment: 'دفعة خط',
+  Expense: 'مصروف',
+  ExpenseCategory: 'تصنيف مصروفات',
+  OwnerWithdrawal: 'سحب المالك',
+  CashMovement: 'حركة نقدية',
+  Settings: 'الإعدادات',
+  Backup: 'نسخة احتياطية',
+  User: 'مستخدم',
 };
 
 type BadgeVariant = 'success' | 'default' | 'destructive' | 'warning' | 'secondary';
@@ -59,7 +51,8 @@ function actionVariant(action: AuditAction): BadgeVariant {
   if (
     action.endsWith('_CREATED') ||
     action.endsWith('_ADDED') ||
-    action.endsWith('_RETURNED')
+    action.endsWith('_RETURNED') ||
+    action.endsWith('_ACTIVATED')
   ) {
     return 'success';
   }
@@ -67,6 +60,8 @@ function actionVariant(action: AuditAction): BadgeVariant {
   if (
     action.endsWith('_CANCELLED') ||
     action.endsWith('_REVERSED') ||
+    action.endsWith('_DELETED') ||
+    action.endsWith('_DEACTIVATED') ||
     action === 'LOGIN_FAILED'
   ) {
     return 'destructive';
@@ -84,6 +79,10 @@ function actionVariant(action: AuditAction): BadgeVariant {
 function shortId(id: string | null): string {
   if (!id) return '—';
   return id.slice(0, 8);
+}
+
+function getEntityTypeLabel(entityType: string): string {
+  return ENTITY_TYPE_LABELS[entityType] ?? entityType;
 }
 
 export function AuditLogsTable({
@@ -105,38 +104,38 @@ export function AuditLogsTable({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border bg-card">
+      <div className="rounded-md border bg-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>التاريخ</TableHead>
+              <TableHead>التاريخ والوقت</TableHead>
               <TableHead>العملية</TableHead>
-              <TableHead>الكيان</TableHead>
-              <TableHead>IP</TableHead>
-              <TableHead className="w-24"></TableHead>
+              <TableHead className="hidden sm:table-cell">المستخدم</TableHead>
+              <TableHead className="hidden md:table-cell">السجل المتأثر</TableHead>
+              <TableHead className="w-20"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((log) => (
               <TableRow key={log.id}>
-                <TableCell className="text-sm whitespace-nowrap">
+                <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
                   {formatDateTime(log.createdAt)}
                 </TableCell>
                 <TableCell>
                   <Badge variant={actionVariant(log.action)}>
-                    {ACTION_LABELS[log.action]}
+                    {ACTION_LABELS[log.action] ?? log.action}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-sm">
-                  <span className="font-medium">{log.entityType}</span>
+                <TableCell className="hidden sm:table-cell text-sm">
+                  {log.userEmail ?? '—'}
+                </TableCell>
+                <TableCell className="hidden md:table-cell text-sm">
+                  <span className="font-medium">{getEntityTypeLabel(log.entityType)}</span>
                   {log.entityId && (
                     <span className="num text-muted-foreground ms-2 text-xs">
                       {shortId(log.entityId)}
                     </span>
                   )}
-                </TableCell>
-                <TableCell className="num text-xs text-muted-foreground">
-                  {log.ipAddress ?? '—'}
                 </TableCell>
                 <TableCell>
                   <Button
@@ -165,4 +164,4 @@ export function AuditLogsTable({
   );
 }
 
-export { ACTION_LABELS };
+export { ACTION_LABELS, ENTITY_TYPE_LABELS };

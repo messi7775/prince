@@ -1,13 +1,4 @@
 import { TrendingDown } from 'lucide-react';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import {
@@ -58,36 +49,8 @@ export function ExpensesReportTab({
     );
   }
 
-  const chartData = data.rows.map((row) => ({
-    name: row.categoryName,
-    total: Number(row.total),
-  }));
-
   return (
     <div className="space-y-4">
-      {/* Chart */}
-      <div className="rounded-md border bg-card p-4">
-        <h3 className="text-sm font-medium mb-3">المصروفات حسب التصنيف</h3>
-        <div className="h-64" dir="ltr">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip
-                formatter={(value: number) => formatMoney(String(value))}
-                contentStyle={{ direction: 'rtl' }}
-              />
-              <Bar
-                dataKey="total"
-                fill="hsl(var(--destructive))"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
       {/* Table */}
       <div className="rounded-md border bg-card">
         <Table>

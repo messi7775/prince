@@ -215,6 +215,51 @@ export class ExpensesService {
     return this.toExpense(row);
   }
 
+  async delete(
+    id: string,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<{ success: boolean }> {
+    return this.prisma.$transaction(async (tx) => {
+      const existing = await tx.expense.findUnique({ where: { id } });
+      if (!existing) {
+        throw new NotFoundException({
+          message: 'المصروف غير موجود',
+          code: 'EXPENSE_NOT_FOUND',
+        });
+      }
+
+      if (existing.status !== 'ACTIVE') {
+        throw new BusinessException(
+          'EXPENSE_NOT_ACTIVE',
+          'لا يمكن حذف مصروف معكوس',
+          400,
+        );
+      }
+
+      await tx.cashMovement.deleteMany({
+        where: { sourceType: 'EXPENSE', sourceId: id },
+      });
+
+      await tx.expense.delete({ where: { id } });
+
+      await this.auditService.logTx(tx, {
+        userId,
+        action: 'EXPENSE_DELETED',
+        entityType: 'Expense',
+        entityId: id,
+        oldValues: {
+          description: existing.description,
+          amount: existing.amount.toString(),
+        },
+        ipAddress: req.ip ?? null,
+        userAgent: req.userAgent ?? null,
+      });
+
+      return { success: true };
+    });
+  }
+
   async reverse(
     id: string,
     input: ReverseExpenseInput,

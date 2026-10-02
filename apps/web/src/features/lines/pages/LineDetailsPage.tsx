@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowRight, Pencil, Plus } from 'lucide-react';
-import type { CreateLineInput } from '@prince-net/validation';
+import type { CreateLineInput, UpdateLinePaymentInput } from '@prince-net/validation';
 import type { LinePayment } from '@prince-net/types';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/button';
@@ -14,14 +14,21 @@ import {
 } from '../../../components/ui/card';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
+import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { useToast } from '../../../components/ui/use-toast';
 import { useLine } from '../hooks/useLine';
 import { useUpdateLine } from '../hooks/useUpdateLine';
+import {
+  useActivateLine,
+  useDeactivateLine,
+} from '../hooks/useLineStatus';
 import { LineFormDialog } from '../components/LineFormDialog';
 import { useLinePayments } from '../../line-payments/hooks/useLinePayments';
+import { useUpdateLinePayment } from '../../line-payments/hooks/useUpdateLinePayment';
+import { useDeleteLinePayment } from '../../line-payments/hooks/useDeleteLinePayment';
 import { LinePaymentsTable } from '../../line-payments/components/LinePaymentsTable';
 import { CreateLinePaymentDialog } from '../../line-payments/components/CreateLinePaymentDialog';
-import { ReverseLinePaymentDialog } from '../../line-payments/components/ReverseLinePaymentDialog';
+import { EditLinePaymentDialog } from '../../line-payments/components/EditLinePaymentDialog';
 import { formatMoney } from '../../../lib/currency';
 import { formatDate } from '../../../lib/format';
 import { ApiClientError } from '../../../lib/api-client';
@@ -33,12 +40,20 @@ export function LineDetailsPage() {
   const { toast } = useToast();
 
   const [editOpen, setEditOpen] = useState(false);
+  const [toggleTarget, setToggleTarget] = useState<boolean | null>(null);
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [createPaymentOpen, setCreatePaymentOpen] = useState(false);
-  const [reverseTarget, setReverseTarget] = useState<LinePayment | null>(null);
+  const [editPaymentTarget, setEditPaymentTarget] =
+    useState<LinePayment | null>(null);
+  const [deletePaymentTarget, setDeletePaymentTarget] =
+    useState<LinePayment | null>(null);
 
   const lineQuery = useLine(id);
   const updateMutation = useUpdateLine();
+  const activateMutation = useActivateLine();
+  const deactivateMutation = useDeactivateLine();
+  const updatePaymentMutation = useUpdateLinePayment();
+  const deletePaymentMutation = useDeleteLinePayment();
 
   const paymentsQuery = useLinePayments({
     lineId: id,
@@ -66,6 +81,8 @@ export function LineDetailsPage() {
   }
 
   const line = lineQuery.data;
+  const isStatusUpdating =
+    activateMutation.isPending || deactivateMutation.isPending;
 
   const handleUpdate = async (input: CreateLineInput) => {
     try {
@@ -76,6 +93,61 @@ export function LineDetailsPage() {
       toast({
         variant: 'destructive',
         title: 'فشل التحديث',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handleToggleStatus = async () => {
+    if (toggleTarget === null) return;
+    try {
+      if (toggleTarget) {
+        await deactivateMutation.mutateAsync(line.id);
+        toast({ title: 'تم التعطيل' });
+      } else {
+        await activateMutation.mutateAsync(line.id);
+        toast({ title: 'تم التفعيل' });
+      }
+      setToggleTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل التغيير',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handleEditPayment = async (input: UpdateLinePaymentInput) => {
+    if (!editPaymentTarget) return;
+    try {
+      await updatePaymentMutation.mutateAsync({
+        id: editPaymentTarget.id,
+        input,
+      });
+      toast({ title: 'تم تحديث الدفعة' });
+      setEditPaymentTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل التحديث',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handleDeletePayment = async () => {
+    if (!deletePaymentTarget) return;
+    try {
+      await deletePaymentMutation.mutateAsync({
+        id: deletePaymentTarget.id,
+      });
+      toast({ title: 'تم حذف الدفعة' });
+      setDeletePaymentTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل الحذف',
         description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
       });
     }
@@ -95,10 +167,20 @@ export function LineDetailsPage() {
           title={line.name}
           description={line.provider}
           actions={
-            <Button variant="outline" onClick={() => setEditOpen(true)}>
-              <Pencil className="me-2 h-4 w-4" />
-              تعديل
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={() => setEditOpen(true)} className="flex-1 sm:flex-none">
+                <Pencil className="me-2 h-4 w-4" />
+                تعديل
+              </Button>
+              <Button
+                variant={line.status === 'ACTIVE' ? 'destructive' : 'default'}
+                onClick={() => setToggleTarget(line.status === 'ACTIVE')}
+                disabled={isStatusUpdating}
+                className="flex-1 sm:flex-none"
+              >
+                {line.status === 'ACTIVE' ? 'تعطيل' : 'تفعيل'}
+              </Button>
+            </div>
           }
         />
 
@@ -191,7 +273,8 @@ export function LineDetailsPage() {
               page={paymentsPage}
               totalPages={paymentsQuery.data?.meta.totalPages ?? 0}
               onPageChange={setPaymentsPage}
-              onReverse={setReverseTarget}
+              onEdit={setEditPaymentTarget}
+              onDelete={setDeletePaymentTarget}
             />
           )}
         </CardContent>
@@ -206,17 +289,45 @@ export function LineDetailsPage() {
         isSubmitting={updateMutation.isPending}
       />
 
+      <ConfirmDialog
+        open={toggleTarget !== null}
+        onOpenChange={(open) => !open && setToggleTarget(null)}
+        onConfirm={handleToggleStatus}
+        title={toggleTarget ? 'تعطيل الخط' : 'تفعيل الخط'}
+        description={
+          toggleTarget
+            ? `سيتم تعطيل "${line.name}".`
+            : `سيتم تفعيل "${line.name}".`
+        }
+        confirmLabel={toggleTarget ? 'تعطيل' : 'تفعيل'}
+        variant={toggleTarget ? 'destructive' : 'default'}
+        isLoading={isStatusUpdating}
+      />
+
       <CreateLinePaymentDialog
         open={createPaymentOpen}
         onOpenChange={setCreatePaymentOpen}
         lineId={line.id}
       />
 
-      <ReverseLinePaymentDialog
-        open={!!reverseTarget}
-        onOpenChange={(open) => !open && setReverseTarget(null)}
-        payment={reverseTarget}
+      <EditLinePaymentDialog
+        open={!!editPaymentTarget}
+        onOpenChange={(open) => !open && setEditPaymentTarget(null)}
+        payment={editPaymentTarget}
         lineId={line.id}
+        onSubmit={handleEditPayment}
+        isSubmitting={updatePaymentMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={!!deletePaymentTarget}
+        onOpenChange={(open) => !open && setDeletePaymentTarget(null)}
+        onConfirm={handleDeletePayment}
+        title="حذف الدفعة"
+        description="سيتم حذف الدفعة نهائيًا. هل أنت متأكد؟"
+        confirmLabel="حذف"
+        variant="destructive"
+        isLoading={deletePaymentMutation.isPending}
       />
     </div>
   );

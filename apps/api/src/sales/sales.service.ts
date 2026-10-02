@@ -10,6 +10,7 @@ import type {
 import type {
   CreateSaleInput,
   CancelSaleInput,
+  UpdateSaleInput,
 } from '@prince-net/validation';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
@@ -66,11 +67,15 @@ export class SalesService {
         skip,
         take,
         orderBy: { saleDate: order },
+        include: { distributor: { select: { name: true } } },
       }),
       this.prisma.sale.count({ where }),
     ]);
 
-    const data: Sale[] = rows.map((row) => this.toSale(row));
+    const data: Sale[] = rows.map((row) => ({
+      ...this.toSale(row),
+      distributorName: row.distributor.name,
+    }));
     const meta: PaginationMeta = buildPaginationMeta(total, page, limit);
 
     return { success: true, data, meta };
@@ -493,6 +498,239 @@ export class SalesService {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
         timeout: 15000,
       },
+    ).then((id) => this.findById(id));
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // Update — تعديل بنود الفاتورة (items + notes) مع إعادة تخصيص FIFO
+  // ───────────────────────────────────────────────────────────
+  async update(
+    saleId: string,
+    input: UpdateSaleInput,
+    userId: string,
+    req: { ip?: string; userAgent?: string },
+  ): Promise<SaleDetails> {
+    return withSerializableRetry(() =>
+      this.prisma.$transaction(
+        async (tx) => {
+          // ─── 1. Lock Sale ───
+          const locked = await tx.$queryRaw<
+            { id: string; status: string; invoice_number: string }[]
+          >`
+            SELECT id, status, invoice_number
+            FROM sales
+            WHERE id = ${saleId}::uuid
+            FOR UPDATE
+          `;
+
+          if (locked.length === 0) {
+            throw new NotFoundException({
+              message: 'الفاتورة غير موجودة',
+              code: 'SALE_NOT_FOUND',
+            });
+          }
+
+          if (locked[0]!.status !== 'ACTIVE') {
+            throw new BusinessException(
+              'SALE_NOT_ACTIVE',
+              'لا يمكن تعديل فاتورة ملغاة',
+              400,
+            );
+          }
+
+          const invoiceNumber = locked[0]!.invoice_number;
+
+          // ─── 2. Load existing sale + items + payments ───
+          const sale = await tx.sale.findUnique({
+            where: { id: saleId },
+            include: { items: true, payments: true },
+          });
+          if (!sale) {
+            throw new NotFoundException({
+              message: 'الفاتورة غير موجودة',
+              code: 'SALE_NOT_FOUND',
+            });
+          }
+
+          // ─── 3. Validate new packages ───
+          const packageIds = input.items.map((i) => i.packageId);
+          const packages = await tx.package.findMany({
+            where: { id: { in: packageIds } },
+            select: { id: true, name: true, price: true, status: true },
+          });
+          const packageMap = new Map(packages.map((p) => [p.id, p]));
+
+          for (const item of input.items) {
+            const pkg = packageMap.get(item.packageId);
+            if (!pkg) {
+              throw new NotFoundException({
+                message: `الباقة ${item.packageId} غير موجودة`,
+                code: 'PACKAGE_NOT_FOUND',
+              });
+            }
+            if (pkg.status !== 'ACTIVE') {
+              throw new BusinessException(
+                'PACKAGE_INACTIVE',
+                `الباقة ${pkg.name} غير مفعّلة`,
+                400,
+              );
+            }
+          }
+
+          // ─── 4. Reverse old SELL movements (restore inventory) ───
+          const oldSellMovements = await tx.inventoryMovement.findMany({
+            where: {
+              referenceType: 'Sale',
+              referenceId: saleId,
+              type: 'SELL',
+            },
+          });
+
+          // Lock affected stocks
+          const oldStockIds = Array.from(
+            new Set(oldSellMovements.map((m) => m.packageStockId)),
+          ).sort();
+          if (oldStockIds.length > 0) {
+            await tx.$queryRaw`
+              SELECT id FROM package_stocks
+              WHERE id = ANY(${oldStockIds}::uuid[])
+              ORDER BY id ASC
+              FOR UPDATE
+            `;
+          }
+
+          for (const sell of oldSellMovements) {
+            await tx.inventoryMovement.create({
+              data: {
+                packageStockId: sell.packageStockId,
+                type: 'RETURN',
+                quantityDelta: Math.abs(sell.quantityDelta),
+                unitPrice: sell.unitPrice,
+                referenceType: 'Sale',
+                referenceId: saleId,
+                description: `إرجاع مخزون بسبب تعديل الفاتورة ${invoiceNumber}`,
+                createdBy: userId,
+              },
+            });
+          }
+
+          // ─── 5. Delete old sale items ───
+          await tx.saleItem.deleteMany({
+            where: { saleId },
+          });
+
+          // ─── 6. Delete old SELL movements ───
+          await tx.inventoryMovement.deleteMany({
+            where: {
+              referenceType: 'Sale',
+              referenceId: saleId,
+              type: 'SELL',
+            },
+          });
+
+          // ─── 7. FIFO allocate new items ───
+          const allAllocations: Array<{
+            packageId: string;
+            allocations: Awaited<ReturnType<typeof allocateFifo>>;
+          }> = [];
+
+          for (const item of input.items) {
+            const allocations = await allocateFifo(
+              tx,
+              item.packageId,
+              item.quantity,
+            );
+            allAllocations.push({
+              packageId: item.packageId,
+              allocations,
+            });
+          }
+
+          // ─── 8. Calculate new totals + create sale items ───
+          let totalAmount = new Prisma.Decimal(0);
+          for (const item of input.items) {
+            const pkg = packageMap.get(item.packageId)!;
+            const unitPrice = pkg.price;
+            const totalPrice = unitPrice.mul(item.quantity);
+            totalAmount = totalAmount.plus(totalPrice);
+
+            await tx.saleItem.create({
+              data: {
+                saleId,
+                packageId: item.packageId,
+                packageNameSnapshot: pkg.name,
+                quantity: item.quantity,
+                unitPrice,
+                totalPrice,
+              },
+            });
+          }
+
+          // ─── 9. Check paid amount vs new total ───
+          const paidAmount = sale.payments
+            .filter((p) => p.status === 'ACTIVE')
+            .reduce((sum, p) => sum.plus(p.amount), new Prisma.Decimal(0));
+
+          if (paidAmount.gt(totalAmount)) {
+            throw new BusinessException(
+              'PAID_EXCEEDS_NEW_TOTAL',
+              `المبلغ المدفوع (${paidAmount.toString()}) أكبر من الإجمالي الجديد (${totalAmount.toString()}). يجب عكس الدفعات الزائدة أولاً.`,
+              400,
+            );
+          }
+
+          // ─── 10. Update sale ───
+          await tx.sale.update({
+            where: { id: saleId },
+            data: {
+              totalAmount,
+              notes: input.notes ?? sale.notes,
+            },
+          });
+
+          // ─── 11. Create new SELL movements ───
+          for (const item of allAllocations) {
+            for (const alloc of item.allocations) {
+              await tx.inventoryMovement.create({
+                data: {
+                  packageStockId: alloc.packageStockId,
+                  type: 'SELL',
+                  quantityDelta: -alloc.quantity,
+                  unitPrice: alloc.unitPrice,
+                  referenceType: 'Sale',
+                  referenceId: saleId,
+                  description: `بيع من فاتورة ${invoiceNumber} (معدّلة)`,
+                  createdBy: userId,
+                },
+              });
+            }
+          }
+
+          // ─── 12. Audit ───
+          await this.auditService.logTx(tx, {
+            userId,
+            action: 'SALE_UPDATED',
+            entityType: 'Sale',
+            entityId: saleId,
+            oldValues: {
+              totalAmount: sale.totalAmount.toString(),
+              itemsCount: sale.items.length,
+            },
+            newValues: {
+              totalAmount: totalAmount.toString(),
+              itemsCount: input.items.length,
+            },
+            ipAddress: req.ip ?? null,
+            userAgent: req.userAgent ?? null,
+          });
+
+          return saleId;
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          timeout: 15000,
+        },
+      ),
     ).then((id) => this.findById(id));
   }
 

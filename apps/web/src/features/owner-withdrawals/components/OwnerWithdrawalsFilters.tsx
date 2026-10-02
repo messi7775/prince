@@ -1,5 +1,5 @@
-import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
+import { DateFilterInput } from '../../../components/ui/date-filter-input';
 import {
   Select,
   SelectContent,
@@ -26,7 +26,7 @@ export function OwnerWithdrawalsFilters({
   onDateToChange,
 }: OwnerWithdrawalsFiltersProps) {
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-3">
       <div className="space-y-1">
         <Label className="text-xs">الحالة</Label>
         <Select
@@ -50,11 +50,9 @@ export function OwnerWithdrawalsFilters({
         <Label className="text-xs" htmlFor="owDateFrom">
           من تاريخ
         </Label>
-        <Input
-          id="owDateFrom"
-          type="date"
+        <DateFilterInput
           value={dateFrom}
-          onChange={(e) => onDateFromChange(e.target.value)}
+          onChange={onDateFromChange}
         />
       </div>
 
@@ -62,11 +60,9 @@ export function OwnerWithdrawalsFilters({
         <Label className="text-xs" htmlFor="owDateTo">
           إلى تاريخ
         </Label>
-        <Input
-          id="owDateTo"
-          type="date"
+        <DateFilterInput
           value={dateTo}
-          onChange={(e) => onDateToChange(e.target.value)}
+          onChange={onDateToChange}
         />
       </div>
     </div>

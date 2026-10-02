@@ -23,7 +23,7 @@ export function TopPackages({ data }: TopPackagesProps) {
             className="border-0 bg-transparent p-4"
           />
         ) : (
-          <ul className="space-y-3">
+          <ul className="space-y-2 sm:space-y-3">
             {data.map((pkg) => (
               <li
                 key={pkg.packageId}

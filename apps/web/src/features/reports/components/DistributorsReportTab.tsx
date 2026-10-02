@@ -47,8 +47,8 @@ export function DistributorsReportTab() {
           <TableHeader>
             <TableRow>
               <TableHead>الموزع</TableHead>
-              <TableHead>إجمالي المبيعات</TableHead>
-              <TableHead>إجمالي الدفعات</TableHead>
+              <TableHead className="hidden sm:table-cell">إجمالي المبيعات</TableHead>
+              <TableHead className="hidden sm:table-cell">إجمالي الدفعات</TableHead>
               <TableHead>الرصيد</TableHead>
             </TableRow>
           </TableHeader>
@@ -62,10 +62,10 @@ export function DistributorsReportTab() {
                   <TableCell className="font-medium">
                     {row.distributorName}
                   </TableCell>
-                  <TableCell className="num">
+                  <TableCell className="hidden sm:table-cell num">
                     {formatMoney(row.totalSales)}
                   </TableCell>
-                  <TableCell className="num">
+                  <TableCell className="hidden sm:table-cell num">
                     {formatMoney(row.totalPayments)}
                   </TableCell>
                   <TableCell

@@ -11,6 +11,7 @@ import { useToast } from '../../../components/ui/use-toast';
 import { useExpenseCategories } from '../hooks/useExpenseCategories';
 import { useCreateExpenseCategory } from '../hooks/useCreateExpenseCategory';
 import { useUpdateExpenseCategory } from '../hooks/useUpdateExpenseCategory';
+import { useDeleteExpenseCategory } from '../hooks/useDeleteExpenseCategory';
 import { useActivateExpenseCategory } from '../hooks/useActivateExpenseCategory';
 import { useDeactivateExpenseCategory } from '../hooks/useDeactivateExpenseCategory';
 import { ExpenseCategoriesTable } from '../components/ExpenseCategoriesTable';
@@ -22,6 +23,9 @@ export function ExpenseCategoriesPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<ExpenseCategory | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ExpenseCategory | null>(
+    null,
+  );
   const [toggleTarget, setToggleTarget] =
     useState<ExpenseCategory | null>(null);
 
@@ -30,6 +34,7 @@ export function ExpenseCategoriesPage() {
 
   const createMutation = useCreateExpenseCategory();
   const updateMutation = useUpdateExpenseCategory();
+  const deleteMutation = useDeleteExpenseCategory();
   const activateMutation = useActivateExpenseCategory();
   const deactivateMutation = useDeactivateExpenseCategory();
 
@@ -63,6 +68,21 @@ export function ExpenseCategoriesPage() {
       toast({
         variant: 'destructive',
         title: 'فشل الحفظ',
+        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteMutation.mutateAsync(deleteTarget.id);
+      toast({ title: 'تم الحذف' });
+      setDeleteTarget(null);
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'فشل الحذف',
         description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
       });
     }
@@ -113,6 +133,7 @@ export function ExpenseCategoriesPage() {
         <ExpenseCategoriesTable
           data={data}
           onEdit={handleEdit}
+          onDelete={setDeleteTarget}
           onToggleStatus={setToggleTarget}
           isUpdating={isStatusUpdating}
         />
@@ -127,6 +148,17 @@ export function ExpenseCategoriesPage() {
         onSubmit={handleFormSubmit}
         initialData={editing}
         isSubmitting={isFormSubmitting}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="حذف التصنيف"
+        description={`سيتم حذف "${deleteTarget?.name ?? ''}" نهائيًا. هل أنت متأكد؟`}
+        confirmLabel="حذف"
+        variant="destructive"
+        isLoading={deleteMutation.isPending}
       />
 
       <ConfirmDialog
