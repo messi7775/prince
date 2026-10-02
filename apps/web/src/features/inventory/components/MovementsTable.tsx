@@ -54,7 +54,7 @@ export function MovementsTable({ data }: MovementsTableProps) {
             <TableHead>التاريخ</TableHead>
             <TableHead>النوع</TableHead>
             <TableHead>التغيير</TableHead>
-            <TableHead className="hidden sm:table-cell">سعر الوحدة</TableHead>
+            <TableHead className="hidden sm:table-cell">سعر الشدة</TableHead>
             <TableHead className="hidden md:table-cell">الوصف</TableHead>
           </TableRow>
         </TableHeader>

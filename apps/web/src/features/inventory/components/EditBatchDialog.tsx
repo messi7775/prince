@@ -94,7 +94,7 @@ export function EditBatchDialog({
           <DialogDescription>
             {batch && (
               <>
-                الكمية الحالية: {batch.currentQuantity} وحدة
+                الكمية الحالية: {batch.currentQuantity} شدة
               </>
             )}
           </DialogDescription>
@@ -106,7 +106,7 @@ export function EditBatchDialog({
           id="edit-batch-form"
         >
           <div className="space-y-2">
-            <Label htmlFor="unitPrice">سعر الوحدة (ر.ي)</Label>
+            <Label htmlFor="unitPrice">سعر الشدة (ر.ي)</Label>
             <Input
               id="unitPrice"
               type="text"

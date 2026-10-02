@@ -48,7 +48,7 @@ export function PackagesTable({
         <TableHeader>
           <TableRow>
             <TableHead>الاسم</TableHead>
-            <TableHead>السعر</TableHead>
+            <TableHead>سعر الكرت</TableHead>
             <TableHead className="hidden sm:table-cell">البيانات</TableHead>
             <TableHead className="hidden sm:table-cell">الساعات</TableHead>
             <TableHead>الحالة</TableHead>

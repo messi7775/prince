@@ -206,7 +206,7 @@ export class SalesService {
               });
             }
 
-            // ─── 4. Calculate totals from DB prices ───
+            // ─── 4. Calculate totals from FIFO allocation prices (سعر الشدة) ───
             let totalAmount = new Prisma.Decimal(0);
             const itemData: Array<{
               packageId: string;
@@ -216,18 +216,26 @@ export class SalesService {
               totalPrice: Prisma.Decimal;
             }> = [];
 
-            for (const item of input.items) {
+            for (let idx = 0; idx < input.items.length; idx++) {
+              const item = input.items[idx];
               const pkg = packageMap.get(item.packageId)!;
-              const unitPrice = pkg.price;
-              const totalPrice = unitPrice.mul(item.quantity);
-              totalAmount = totalAmount.plus(totalPrice);
+              const allocs = allAllocations[idx].allocations;
+
+              let itemTotal = new Prisma.Decimal(0);
+              for (const alloc of allocs) {
+                itemTotal = itemTotal.plus(
+                  alloc.unitPrice.mul(alloc.quantity),
+                );
+              }
+              const unitPrice = itemTotal.div(item.quantity);
+              totalAmount = totalAmount.plus(itemTotal);
 
               itemData.push({
                 packageId: item.packageId,
                 packageNameSnapshot: pkg.name,
                 quantity: item.quantity,
                 unitPrice,
-                totalPrice,
+                totalPrice: itemTotal,
               });
             }
 
@@ -646,13 +654,21 @@ export class SalesService {
             });
           }
 
-          // ─── 8. Calculate new totals + create sale items ───
+          // ─── 8. Calculate new totals from FIFO allocation prices (سعر الشدة) + create sale items ───
           let totalAmount = new Prisma.Decimal(0);
-          for (const item of input.items) {
+          for (let idx = 0; idx < input.items.length; idx++) {
+            const item = input.items[idx];
             const pkg = packageMap.get(item.packageId)!;
-            const unitPrice = pkg.price;
-            const totalPrice = unitPrice.mul(item.quantity);
-            totalAmount = totalAmount.plus(totalPrice);
+            const allocs = allAllocations[idx].allocations;
+
+            let itemTotal = new Prisma.Decimal(0);
+            for (const alloc of allocs) {
+              itemTotal = itemTotal.plus(
+                alloc.unitPrice.mul(alloc.quantity),
+              );
+            }
+            const unitPrice = itemTotal.div(item.quantity);
+            totalAmount = totalAmount.plus(itemTotal);
 
             await tx.saleItem.create({
               data: {
@@ -661,7 +677,7 @@ export class SalesService {
                 packageNameSnapshot: pkg.name,
                 quantity: item.quantity,
                 unitPrice,
-                totalPrice,
+                totalPrice: itemTotal,
               },
             });
           }

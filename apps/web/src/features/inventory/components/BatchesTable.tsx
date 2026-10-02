@@ -51,8 +51,8 @@ export function BatchesTable({
         <TableHeader>
           <TableRow>
             <TableHead>تاريخ الاستلام</TableHead>
-            <TableHead>سعر الوحدة</TableHead>
-            <TableHead>الكمية الحالية</TableHead>
+            <TableHead>سعر الشدة</TableHead>
+            <TableHead>كمية الشدات</TableHead>
             <TableHead className="hidden sm:table-cell">ملاحظات</TableHead>
             <TableHead className="w-12"></TableHead>
           </TableRow>

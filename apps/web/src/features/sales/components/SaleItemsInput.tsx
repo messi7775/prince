@@ -7,7 +7,7 @@ import {
   type UseFormRegister,
   type FieldErrors,
 } from 'react-hook-form';
-import type { PackageEntity } from '@prince-net/types';
+
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '../../../components/ui/select';
 import { usePackages } from '../../packages/hooks/usePackages';
-import { formatMoney } from '../../../lib/currency';
+
 
 interface SaleItemsInputProps<T extends { items: Array<{ packageId: string; quantity: number }> }> {
   control: Control<T>;
@@ -48,9 +48,6 @@ export function SaleItemsInput<T extends { items: Array<{ packageId: string; qua
   });
 
   const packages = packagesQuery.data?.data ?? [];
-  const packageMap = new Map<string, PackageEntity>(
-    packages.map((p) => [p.id, p]),
-  );
 
   const handleAdd = () => {
     append({ packageId: '', quantity: 1 });
@@ -80,10 +77,6 @@ export function SaleItemsInput<T extends { items: Array<{ packageId: string; qua
 
       <div className="space-y-3">
         {fields.map((field, index) => {
-          const currentId = watchedItems?.[index]?.packageId ?? '';
-          const selectedPkg = currentId
-            ? packageMap.get(currentId)
-            : undefined;
           const itemErrors = errors.items?.[index];
 
           return (
@@ -110,7 +103,7 @@ export function SaleItemsInput<T extends { items: Array<{ packageId: string; qua
                         <SelectContent>
                           {packages.map((pkg) => (
                             <SelectItem key={pkg.id} value={pkg.id}>
-                              {pkg.name} — {formatMoney(pkg.price)}
+                              {pkg.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -155,12 +148,6 @@ export function SaleItemsInput<T extends { items: Array<{ packageId: string; qua
                   </Button>
                 </div>
               </div>
-
-              {selectedPkg && (
-                <p className="text-xs text-muted-foreground num">
-                  سعر الوحدة: {formatMoney(selectedPkg.price)}
-                </p>
-              )}
             </div>
           );
         })}

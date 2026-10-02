@@ -41,7 +41,7 @@ export function SaleSummary({ items, packages, className }: SaleSummaryProps) {
         </span>
       </div>
       <p className="text-xs text-muted-foreground">
-        الإجمالي النهائي يُحسب في الخادم حسب أسعار قاعدة البيانات.
+        الإجمالي النهائي يُحسب في الخادم حسب سعر الشدة من المخزون.
       </p>
     </div>
   );

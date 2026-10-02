@@ -34,7 +34,7 @@ export function TopPackages({ data }: TopPackagesProps) {
                     {pkg.packageName}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {pkg.quantity} بطاقة
+                    {pkg.quantity} شدة
                   </p>
                 </div>
                 <div className="text-sm font-semibold num shrink-0">

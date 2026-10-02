@@ -109,7 +109,7 @@ export function AddInventoryDialog({
         <DialogHeader>
           <DialogTitle>إضافة دفعة مخزون</DialogTitle>
           <DialogDescription>
-            سيتم إنشاء دفعة جديدة بحساب سعر الوحدة الخاص بها
+            سيتم إنشاء دفعة جديدة بحساب سعر الشدة الخاص بها
           </DialogDescription>
         </DialogHeader>
 
@@ -149,7 +149,7 @@ export function AddInventoryDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             {/* Quantity */}
             <div className="space-y-2">
-              <Label htmlFor="quantity">الكمية</Label>
+              <Label htmlFor="quantity">كمية الشدات</Label>
               <Input
                 id="quantity"
                 type="number"
@@ -167,7 +167,7 @@ export function AddInventoryDialog({
 
             {/* Unit Price */}
             <div className="space-y-2">
-              <Label htmlFor="unitPrice">سعر الوحدة (ر.ي)</Label>
+              <Label htmlFor="unitPrice">سعر الشدة (ر.ي)</Label>
               <Input
                 id="unitPrice"
                 type="text"
