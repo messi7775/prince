@@ -1,6 +1,5 @@
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { DateFilterInput } from '../../../components/ui/date-filter-input';
 import {
   Select,
   SelectContent,
@@ -35,7 +34,7 @@ export function ExpensesFilters({
   const categories = categoriesQuery.data ?? [];
 
   return (
-    <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div className="space-y-1">
         <Label className="text-xs">التصنيف</Label>
         <Select
@@ -80,9 +79,11 @@ export function ExpensesFilters({
         <Label className="text-xs" htmlFor="expDateFrom">
           من تاريخ
         </Label>
-        <DateFilterInput
+        <Input
+          id="expDateFrom"
+          type="date"
           value={dateFrom}
-          onChange={onDateFromChange}
+          onChange={(e) => onDateFromChange(e.target.value)}
         />
       </div>
 
@@ -90,9 +91,11 @@ export function ExpensesFilters({
         <Label className="text-xs" htmlFor="expDateTo">
           إلى تاريخ
         </Label>
-        <DateFilterInput
+        <Input
+          id="expDateTo"
+          type="date"
           value={dateTo}
-          onChange={onDateToChange}
+          onChange={(e) => onDateToChange(e.target.value)}
         />
       </div>
     </div>

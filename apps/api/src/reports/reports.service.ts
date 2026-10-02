@@ -9,10 +9,6 @@ import type {
   DistributorReportRow,
   ExpenseReportRow,
   LineReportRow,
-  CollectionsReportRow,
-  CollectionsReportSummary,
-  OwnerWithdrawalsReportRow,
-  OwnerWithdrawalsReportSummary,
 } from '@prince-net/types';
 import { PrismaService } from '../prisma/prisma.service';
 import { toMoneyStringRequired } from '../common/utils/money.util';
@@ -406,110 +402,11 @@ export class ReportsService {
   }
 
   // ───────────────────────────────────────────────────────────
-  // Collections Report — ACTIVE payments
-  // ───────────────────────────────────────────────────────────
-  async collectionsReport(query: DateRangeQuery): Promise<{
-    rows: CollectionsReportRow[];
-    summary: CollectionsReportSummary;
-  }> {
-    const dateFilter = this.buildDateFilter(query, 'paymentDate');
-
-    const where: Prisma.PaymentWhereInput = {
-      status: 'ACTIVE',
-      ...dateFilter,
-    };
-
-    const [payments, totalAgg] = await Promise.all([
-      this.prisma.payment.findMany({
-        where,
-        orderBy: { paymentDate: 'desc' },
-        include: {
-          sale: {
-            select: {
-              invoiceNumber: true,
-              distributor: { select: { name: true } },
-            },
-          },
-        },
-      }),
-      this.prisma.payment.aggregate({
-        where,
-        _sum: { amount: true },
-        _count: { id: true },
-      }),
-    ]);
-
-    const rows: CollectionsReportRow[] = payments.map((p) => ({
-      date: p.paymentDate.toISOString(),
-      invoiceNumber: p.sale.invoiceNumber,
-      distributorName: p.sale.distributor.name,
-      amount: toMoneyStringRequired(p.amount),
-      status: p.status,
-      notes: p.notes,
-    }));
-
-    return {
-      rows,
-      summary: {
-        count: totalAgg._count.id ?? 0,
-        totalCollected: toMoneyStringRequired(
-          totalAgg._sum.amount ?? new Prisma.Decimal(0),
-        ),
-      },
-    };
-  }
-
-  // ───────────────────────────────────────────────────────────
-  // Owner Withdrawals Report — ACTIVE only
-  // ───────────────────────────────────────────────────────────
-  async ownerWithdrawalsReport(query: DateRangeQuery): Promise<{
-    rows: OwnerWithdrawalsReportRow[];
-    summary: OwnerWithdrawalsReportSummary;
-  }> {
-    const dateFilter = this.buildDateFilter(query, 'withdrawalDate');
-
-    const where: Prisma.OwnerWithdrawalWhereInput = {
-      status: 'ACTIVE',
-      ...dateFilter,
-    };
-
-    const [withdrawals, totalAgg] = await Promise.all([
-      this.prisma.ownerWithdrawal.findMany({
-        where,
-        orderBy: { withdrawalDate: 'desc' },
-      }),
-      this.prisma.ownerWithdrawal.aggregate({
-        where,
-        _sum: { amount: true },
-        _count: { id: true },
-      }),
-    ]);
-
-    const rows: OwnerWithdrawalsReportRow[] = withdrawals.map((w) => ({
-      date: w.withdrawalDate.toISOString(),
-      reason: w.reason,
-      amount: toMoneyStringRequired(w.amount),
-      status: w.status,
-      notes: w.notes,
-    }));
-
-    return {
-      rows,
-      summary: {
-        count: totalAgg._count.id ?? 0,
-        totalWithdrawn: toMoneyStringRequired(
-          totalAgg._sum.amount ?? new Prisma.Decimal(0),
-        ),
-      },
-    };
-  }
-
-  // ───────────────────────────────────────────────────────────
   // Helpers
   // ───────────────────────────────────────────────────────────
   private buildDateFilter(
     query: DateRangeQuery,
-    field: 'saleDate' | 'expenseDate' | 'paymentDate' | 'withdrawalDate',
+    field: 'saleDate' | 'expenseDate',
   ): Record<string, { gte?: Date; lte?: Date }> {
     if (!query.dateFrom && !query.dateTo) return {};
     return {

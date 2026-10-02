@@ -23,7 +23,7 @@ export function DistributorDebts({ data }: DistributorDebtsProps) {
             className="border-0 bg-transparent p-4"
           />
         ) : (
-          <ul className="space-y-2 sm:space-y-3">
+          <ul className="space-y-3">
             {data.map((d) => (
               <li
                 key={d.distributorId}

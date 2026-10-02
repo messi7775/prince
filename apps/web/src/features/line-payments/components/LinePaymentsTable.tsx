@@ -1,4 +1,4 @@
-import { CreditCard, MoreHorizontal } from 'lucide-react';
+import { CreditCard, RotateCcw } from 'lucide-react';
 import type { LinePayment } from '@prince-net/types';
 import {
   Table,
@@ -10,12 +10,6 @@ import {
 } from '../../../components/ui/table';
 import { Badge } from '../../../components/ui/badge';
 import { Button } from '../../../components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../../../components/ui/dropdown-menu';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { Pagination } from '../../../components/ui/pagination';
 import { formatMoney } from '../../../lib/currency';
@@ -26,8 +20,7 @@ interface LinePaymentsTableProps {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  onEdit: (payment: LinePayment) => void;
-  onDelete: (payment: LinePayment) => void;
+  onReverse: (payment: LinePayment) => void;
 }
 
 export function LinePaymentsTable({
@@ -35,8 +28,7 @@ export function LinePaymentsTable({
   page,
   totalPages,
   onPageChange,
-  onEdit,
-  onDelete,
+  onReverse,
 }: LinePaymentsTableProps) {
   if (data.length === 0) {
     return (
@@ -55,11 +47,11 @@ export function LinePaymentsTable({
         <TableHeader>
           <TableRow>
             <TableHead>التاريخ</TableHead>
+            <TableHead>الفترة</TableHead>
             <TableHead>المبلغ</TableHead>
-            <TableHead className="hidden sm:table-cell">الفترة</TableHead>
             <TableHead>الحالة</TableHead>
-            <TableHead className="hidden md:table-cell">ملاحظات</TableHead>
-            <TableHead className="w-12"></TableHead>
+            <TableHead>ملاحظات</TableHead>
+            <TableHead className="w-24"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -68,43 +60,34 @@ export function LinePaymentsTable({
 
             return (
               <TableRow key={payment.id}>
-                <TableCell className="text-sm whitespace-normal sm:whitespace-nowrap">
+                <TableCell className="text-sm whitespace-nowrap">
                   {formatDateTime(payment.paymentDate)}
                 </TableCell>
+                <TableCell className="num text-sm">{payment.period}</TableCell>
                 <TableCell className="num font-medium">
                   {formatMoney(payment.amount)}
                 </TableCell>
-                <TableCell className="hidden sm:table-cell text-sm">{payment.period}</TableCell>
                 <TableCell>
                   <Badge variant={isActive ? 'success' : 'secondary'}>
                     {isActive ? 'نشطة' : 'معكوسة'}
                   </Badge>
                 </TableCell>
-                <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[240px] truncate">
+                <TableCell className="text-sm text-muted-foreground max-w-[240px] truncate">
                   {payment.reversalReason
                     ? `معكوسة: ${payment.reversalReason}`
                     : (payment.notes ?? '—')}
                 </TableCell>
                 <TableCell>
                   {isActive && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(payment)}>
-                          تعديل
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => onDelete(payment)}
-                        >
-                          حذف
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onReverse(payment)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <RotateCcw className="me-1 h-3.5 w-3.5" />
+                      عكس
+                    </Button>
                   )}
                 </TableCell>
               </TableRow>

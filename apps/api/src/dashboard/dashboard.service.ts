@@ -3,6 +3,8 @@ import { Prisma } from '../generated/prisma';
 import type {
   DashboardData,
   DashboardLowStockAlert,
+  DashboardSalesPoint,
+  DashboardCashPoint,
   DashboardTopPackage,
   DashboardDistributorDebt,
   DashboardRecentTransaction,
@@ -10,6 +12,7 @@ import type {
 import { PrismaService } from '../prisma/prisma.service';
 import { toMoneyStringRequired } from '../common/utils/money.util';
 
+const CHART_DAYS = 30;
 const TOP_PACKAGES_LIMIT = 5;
 const RECENT_TRANSACTIONS_LIMIT = 10;
 
@@ -37,6 +40,10 @@ export class DashboardService {
       59,
       999,
     );
+
+    const chartFrom = new Date(now);
+    chartFrom.setDate(chartFrom.getDate() - (CHART_DAYS - 1));
+    chartFrom.setHours(0, 0, 0, 0);
 
     // ─── Today aggregates ───
     const [
@@ -130,11 +137,14 @@ export class DashboardService {
 
     const lowStockAlerts = await this.computeLowStock(threshold);
 
-    // ─── Top packages (last 30 days) ───
-    const topPackagesFrom = new Date(now);
-    topPackagesFrom.setDate(topPackagesFrom.getDate() - 29);
-    topPackagesFrom.setHours(0, 0, 0, 0);
-    const topPackages = await this.buildTopPackages(topPackagesFrom);
+    // ─── Charts ───
+    const [salesChart, cashChart] = await Promise.all([
+      this.buildSalesChart(chartFrom),
+      this.buildCashChart(chartFrom),
+    ]);
+
+    // ─── Top packages ───
+    const topPackages = await this.buildTopPackages(chartFrom);
 
     // ─── Distributor debts (top 5) ───
     const distributorDebts = await this.buildDistributorDebts();
@@ -151,6 +161,8 @@ export class DashboardService {
       totalDistributorDebt: toMoneyStringRequired(totalDistributorDebt),
       todaySalesCount,
       lowStockAlerts,
+      salesChart,
+      cashChart,
       topPackages,
       distributorDebts,
       recentTransactions,
@@ -203,6 +215,77 @@ export class DashboardService {
     }
 
     return alerts;
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // Sales Chart
+  // ───────────────────────────────────────────────────────────
+  private async buildSalesChart(from: Date): Promise<DashboardSalesPoint[]> {
+    const sales = await this.prisma.sale.findMany({
+      where: {
+        status: 'ACTIVE',
+        saleDate: { gte: from },
+      },
+      select: { saleDate: true, totalAmount: true },
+    });
+
+    const byDate = new Map<string, Prisma.Decimal>();
+    for (const sale of sales) {
+      const key = sale.saleDate.toISOString().slice(0, 10);
+      byDate.set(
+        key,
+        (byDate.get(key) ?? new Prisma.Decimal(0)).plus(sale.totalAmount),
+      );
+    }
+
+    return this.fillDateRange(from, byDate);
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // Cash Chart
+  // ───────────────────────────────────────────────────────────
+  private async buildCashChart(from: Date): Promise<DashboardCashPoint[]> {
+    const movements = await this.prisma.cashMovement.findMany({
+      where: { movementDate: { gte: from } },
+      select: { movementDate: true, direction: true, amount: true },
+    });
+
+    const byDate = new Map<
+      string,
+      { in: Prisma.Decimal; out: Prisma.Decimal }
+    >();
+
+    for (const m of movements) {
+      const key = m.movementDate.toISOString().slice(0, 10);
+      const existing = byDate.get(key) ?? {
+        in: new Prisma.Decimal(0),
+        out: new Prisma.Decimal(0),
+      };
+      if (m.direction === 'IN') {
+        existing.in = existing.in.plus(m.amount);
+      } else {
+        existing.out = existing.out.plus(m.amount);
+      }
+      byDate.set(key, existing);
+    }
+
+    const result: DashboardCashPoint[] = [];
+    const cursor = new Date(from);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    while (cursor <= today) {
+      const key = cursor.toISOString().slice(0, 10);
+      const data = byDate.get(key);
+      result.push({
+        date: key,
+        in: toMoneyStringRequired(data?.in ?? new Prisma.Decimal(0)),
+        out: toMoneyStringRequired(data?.out ?? new Prisma.Decimal(0)),
+      });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return result;
   }
 
   // ───────────────────────────────────────────────────────────
@@ -327,4 +410,29 @@ export class DashboardService {
     }));
   }
 
+  // ───────────────────────────────────────────────────────────
+  // Helpers
+  // ───────────────────────────────────────────────────────────
+  private fillDateRange(
+    from: Date,
+    byDate: Map<string, Prisma.Decimal>,
+  ): DashboardSalesPoint[] {
+    const result: DashboardSalesPoint[] = [];
+    const cursor = new Date(from);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    while (cursor <= today) {
+      const key = cursor.toISOString().slice(0, 10);
+      result.push({
+        date: key,
+        total: toMoneyStringRequired(
+          byDate.get(key) ?? new Prisma.Decimal(0),
+        ),
+      });
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    return result;
+  }
 }

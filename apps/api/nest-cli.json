@@ -7,6 +7,6 @@
     "assets": [
       "generated/prisma/**/*"
     ],
-    "watchAssets": true
+    "watchAssets": false
   }
 }

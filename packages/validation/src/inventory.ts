@@ -47,12 +47,6 @@ export const returnInventorySchema = z.object({
   description: z.string().trim().max(500).optional().nullable(),
 });
 
-export const updateBatchSchema = z.object({
-  unitPrice: moneySchema.optional(),
-  notes: z.string().trim().max(500).optional().nullable(),
-});
-
 export type AddInventoryInput = z.infer<typeof addInventorySchema>;
 export type AdjustInventoryInput = z.infer<typeof adjustInventorySchema>;
 export type ReturnInventoryInput = z.infer<typeof returnInventorySchema>;
-export type UpdateBatchInput = z.infer<typeof updateBatchSchema>;

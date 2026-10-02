@@ -36,7 +36,7 @@ export function LoginPage() {
 
   return (
     <div className="min-h-dvh flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md mx-auto">
+      <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
             <span className="text-2xl font-bold">PN</span>

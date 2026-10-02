@@ -27,7 +27,7 @@ export class AuditReadService {
   async list(
     query: AuditListQuery,
   ): Promise<PaginatedResponse<AuditLog>> {
-    const { page, limit, skip, take, search } = normalizePagination(query);
+    const { page, limit, skip, take } = normalizePagination(query);
 
     const where: Prisma.AuditLogWhereInput = {
       ...(query.action ? { action: query.action as never } : {}),
@@ -41,14 +41,6 @@ export class AuditReadService {
             },
           }
         : {}),
-      ...(search
-        ? {
-            OR: [
-              { entityType: { contains: search, mode: 'insensitive' as const } },
-              { user: { email: { contains: search, mode: 'insensitive' as const } } },
-            ],
-          }
-        : {}),
     };
 
     const [rows, total] = await Promise.all([
@@ -57,9 +49,6 @@ export class AuditReadService {
         skip,
         take,
         orderBy: { createdAt: 'desc' },
-        include: {
-          user: { select: { email: true } },
-        },
       }),
       this.prisma.auditLog.count({ where }),
     ]);
@@ -67,7 +56,6 @@ export class AuditReadService {
     const data: AuditLog[] = rows.map((row) => ({
       id: row.id,
       userId: row.userId,
-      userEmail: row.user?.email ?? null,
       action: row.action,
       entityType: row.entityType,
       entityId: row.entityId,
@@ -83,12 +71,7 @@ export class AuditReadService {
   }
 
   async findById(id: string): Promise<AuditLog> {
-    const row = await this.prisma.auditLog.findUnique({
-      where: { id },
-      include: {
-        user: { select: { email: true } },
-      },
-    });
+    const row = await this.prisma.auditLog.findUnique({ where: { id } });
     if (!row) {
       throw new NotFoundException({
         message: 'السجل غير موجود',
@@ -99,7 +82,6 @@ export class AuditReadService {
     return {
       id: row.id,
       userId: row.userId,
-      userEmail: row.user?.email ?? null,
       action: row.action,
       entityType: row.entityType,
       entityId: row.entityId,

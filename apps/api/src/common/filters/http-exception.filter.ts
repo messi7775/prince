@@ -104,30 +104,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       };
     }
 
-    // 3. http-errors (e.g. csrf-csrf ForbiddenError) — has statusCode & expose
-    if (
-      exception instanceof Error &&
-      typeof (exception as { statusCode?: unknown }).statusCode === 'number' &&
-      !(exception instanceof HttpException)
-    ) {
-      const err = exception as Error & {
-        statusCode: number;
-        expose?: boolean;
-        code?: string;
-      };
-      const status = err.statusCode;
-      const message = err.expose ? err.message : 'حدث خطأ داخلي في الخادم';
-      return {
-        statusCode: status,
-        body: {
-          success: false,
-          message,
-          code: err.code ?? this.codeFromStatus(status),
-        },
-      };
-    }
-
-    // 4. Prisma errors
+    // 3. Prisma errors
     if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       return this.fromPrismaError(exception);
     }

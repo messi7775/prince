@@ -5,13 +5,11 @@ import {
   ArrowRight,
   Banknote,
   CreditCard,
-  Pencil,
   Plus,
-  Printer,
   ShoppingCart,
   Users,
 } from 'lucide-react';
-import type { CancelSaleInput, UpdatePaymentInput } from '@prince-net/validation';
+import type { CancelSaleInput } from '@prince-net/validation';
 import type { Payment } from '@prince-net/types';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { Button } from '../../../components/ui/button';
@@ -24,7 +22,6 @@ import {
 } from '../../../components/ui/card';
 import { LoadingState } from '../../../components/ui/loading-state';
 import { ErrorState } from '../../../components/ui/error-state';
-import { ConfirmDialog } from '../../../components/feedback/ConfirmDialog';
 import { StatCard } from '../../dashboard/components/StatCard';
 import {
   Table,
@@ -38,14 +35,10 @@ import { useToast } from '../../../components/ui/use-toast';
 import { useSale } from '../hooks/useSale';
 import { useCancelSale } from '../hooks/useCancelSale';
 import { CancelSaleDialog } from '../components/CancelSaleDialog';
-import { EditSaleDialog } from '../components/EditSaleDialog';
 import { usePayments } from '../../payments/hooks/usePayments';
-import { useUpdatePayment } from '../../payments/hooks/useUpdatePayment';
-import { useDeletePayment } from '../../payments/hooks/useDeletePayment';
 import { PaymentsTable } from '../../payments/components/PaymentsTable';
 import { CreatePaymentDialog } from '../../payments/components/CreatePaymentDialog';
-import { EditPaymentDialog } from '../../payments/components/EditPaymentDialog';
-import { printHTML, buildSaleReceipt } from '../../../lib/print';
+import { ReversePaymentDialog } from '../../payments/components/ReversePaymentDialog';
 import { formatMoney } from '../../../lib/currency';
 import { formatDateTime } from '../../../lib/format';
 import { ApiClientError } from '../../../lib/api-client';
@@ -57,18 +50,12 @@ export function SaleDetailsPage() {
   const { toast } = useToast();
 
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [createPaymentOpen, setCreatePaymentOpen] = useState(false);
-  const [editPaymentTarget, setEditPaymentTarget] =
-    useState<Payment | null>(null);
-  const [deletePaymentTarget, setDeletePaymentTarget] =
-    useState<Payment | null>(null);
+  const [reverseTarget, setReverseTarget] = useState<Payment | null>(null);
 
   const saleQuery = useSale(id);
   const cancelMutation = useCancelSale();
-  const updatePaymentMutation = useUpdatePayment();
-  const deletePaymentMutation = useDeletePayment();
 
   const paymentsQuery = usePayments({
     saleId: id,
@@ -114,65 +101,8 @@ export function SaleDetailsPage() {
     }
   };
 
-  const handleEditPayment = async (input: UpdatePaymentInput) => {
-    if (!editPaymentTarget) return;
-    try {
-      await updatePaymentMutation.mutateAsync({
-        id: editPaymentTarget.id,
-        input,
-      });
-      toast({ title: 'تم تحديث الدفعة' });
-      setEditPaymentTarget(null);
-    } catch (err) {
-      toast({
-        variant: 'destructive',
-        title: 'فشل التحديث',
-        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
-      });
-    }
-  };
-
-  const handleDeletePayment = async () => {
-    if (!deletePaymentTarget) return;
-    try {
-      await deletePaymentMutation.mutateAsync({
-        id: deletePaymentTarget.id,
-      });
-      toast({ title: 'تم حذف الدفعة' });
-      setDeletePaymentTarget(null);
-    } catch (err) {
-      toast({
-        variant: 'destructive',
-        title: 'فشل الحذف',
-        description: err instanceof ApiClientError ? err.message : 'حدث خطأ',
-      });
-    }
-  };
-
-  const handlePrint = () => {
-    printHTML(
-      buildSaleReceipt({
-        invoiceNumber: sale.invoiceNumber,
-        date: formatDateTime(sale.saleDate),
-        distributorName: sale.distributorName ?? '—',
-        status: sale.status,
-        items: sale.items.map((item) => ({
-          packageNameSnapshot: item.packageNameSnapshot,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          totalPrice: item.totalPrice,
-        })),
-        totalAmount: sale.totalAmount,
-        paidAmount: sale.paidAmount,
-        remainingAmount: sale.remainingAmount,
-        notes: sale.notes,
-      }),
-      `فاتورة ${sale.invoiceNumber}`,
-    );
-  };
-
   return (
-    <div className="space-y-3 sm:space-y-6">
+    <div className="space-y-6">
       <div>
         <Button variant="ghost" size="sm" asChild className="mb-3 -ms-2">
           <Link to="/sales">
@@ -185,29 +115,15 @@ export function SaleDetailsPage() {
           title={`فاتورة ${sale.invoiceNumber}`}
           description={formatDateTime(sale.saleDate)}
           actions={
-            <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" onClick={handlePrint} size="sm" className="flex-1 sm:flex-none">
-                <Printer className="me-2 h-4 w-4" />
-                طباعة
+            !isCancelled && (
+              <Button
+                variant="destructive"
+                onClick={() => setCancelOpen(true)}
+              >
+                <AlertTriangle className="me-2 h-4 w-4" />
+                إلغاء الفاتورة
               </Button>
-              {!isCancelled && (
-                <Button variant="outline" onClick={() => setEditOpen(true)} size="sm" className="flex-1 sm:flex-none">
-                  <Pencil className="me-2 h-4 w-4" />
-                  تعديل
-                </Button>
-              )}
-              {!isCancelled && (
-                <Button
-                  variant="destructive"
-                  onClick={() => setCancelOpen(true)}
-                  size="sm"
-                  className="flex-1 sm:flex-none"
-                >
-                  <AlertTriangle className="me-2 h-4 w-4" />
-                  إلغاء الفاتورة
-                </Button>
-              )}
-            </div>
+            )
           }
         />
 
@@ -238,7 +154,7 @@ export function SaleDetailsPage() {
       )}
 
       {/* Financial Cards */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
           title="إجمالي الفاتورة"
           value={formatMoney(sale.totalAmount)}
@@ -286,7 +202,7 @@ export function SaleDetailsPage() {
               <TableRow>
                 <TableHead>الباقة</TableHead>
                 <TableHead>الكمية</TableHead>
-                <TableHead className="hidden sm:table-cell">سعر الوحدة</TableHead>
+                <TableHead>سعر الوحدة</TableHead>
                 <TableHead>الإجمالي</TableHead>
               </TableRow>
             </TableHeader>
@@ -297,7 +213,7 @@ export function SaleDetailsPage() {
                     {item.packageNameSnapshot}
                   </TableCell>
                   <TableCell className="num">{item.quantity}</TableCell>
-                  <TableCell className="hidden sm:table-cell num">
+                  <TableCell className="num">
                     {formatMoney(item.unitPrice)}
                   </TableCell>
                   <TableCell className="num font-medium">
@@ -343,8 +259,7 @@ export function SaleDetailsPage() {
               page={paymentsPage}
               totalPages={paymentsQuery.data?.meta.totalPages ?? 0}
               onPageChange={setPaymentsPage}
-              onEdit={setEditPaymentTarget}
-              onDelete={setDeletePaymentTarget}
+              onReverse={setReverseTarget}
             />
           )}
         </CardContent>
@@ -371,12 +286,6 @@ export function SaleDetailsPage() {
         isLoading={cancelMutation.isPending}
       />
 
-      <EditSaleDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        sale={sale}
-      />
-
       <CreatePaymentDialog
         open={createPaymentOpen}
         onOpenChange={setCreatePaymentOpen}
@@ -386,23 +295,11 @@ export function SaleDetailsPage() {
         remainingAmount={sale.remainingAmount}
       />
 
-      <EditPaymentDialog
-        open={!!editPaymentTarget}
-        onOpenChange={(open) => !open && setEditPaymentTarget(null)}
-        payment={editPaymentTarget}
-        onSubmit={handleEditPayment}
-        isSubmitting={updatePaymentMutation.isPending}
-      />
-
-      <ConfirmDialog
-        open={!!deletePaymentTarget}
-        onOpenChange={(open) => !open && setDeletePaymentTarget(null)}
-        onConfirm={handleDeletePayment}
-        title="حذف الدفعة"
-        description="سيتم حذف الدفعة نهائيًا. هل أنت متأكد؟"
-        confirmLabel="حذف"
-        variant="destructive"
-        isLoading={deletePaymentMutation.isPending}
+      <ReversePaymentDialog
+        open={!!reverseTarget}
+        onOpenChange={(open) => !open && setReverseTarget(null)}
+        payment={reverseTarget}
+        saleId={sale.id}
       />
     </div>
   );

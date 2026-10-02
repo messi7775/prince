@@ -40,11 +40,11 @@ export function BackupsTable({ data, onRestore }: BackupsTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead>اسم الملف</TableHead>
-            <TableHead className="hidden sm:table-cell">الحجم</TableHead>
-            <TableHead className="hidden md:table-cell">عدد السجلات</TableHead>
-            <TableHead className="hidden lg:table-cell">Checksum</TableHead>
-            <TableHead className="hidden sm:table-cell">التاريخ</TableHead>
-            <TableHead className="w-20"></TableHead>
+            <TableHead>الحجم</TableHead>
+            <TableHead>عدد السجلات</TableHead>
+            <TableHead>Checksum</TableHead>
+            <TableHead>التاريخ</TableHead>
+            <TableHead className="w-24"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -53,21 +53,21 @@ export function BackupsTable({ data, onRestore }: BackupsTableProps) {
               <TableCell className="text-sm font-medium">
                 <div className="flex items-center gap-2">
                   <Database className="h-4 w-4 text-muted-foreground shrink-0" />
-                  <span className="sm:truncate sm:max-w-[280px] break-words">
+                  <span className="truncate max-w-[280px]">
                     {backup.fileName}
                   </span>
                 </div>
               </TableCell>
-              <TableCell className="hidden sm:table-cell num text-sm">
+              <TableCell className="num text-sm">
                 {formatFileSize(backup.sizeBytes)}
               </TableCell>
-              <TableCell className="hidden md:table-cell num text-sm">
+              <TableCell className="num text-sm">
                 {backup.recordCount}
               </TableCell>
-              <TableCell className="hidden lg:table-cell num text-xs text-muted-foreground">
+              <TableCell className="num text-xs text-muted-foreground">
                 {shortChecksum(backup.checksum)}…
               </TableCell>
-              <TableCell className="hidden sm:table-cell text-sm whitespace-nowrap">
+              <TableCell className="text-sm whitespace-nowrap">
                 {formatDateTime(backup.createdAt)}
               </TableCell>
               <TableCell>

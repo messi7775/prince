@@ -5,7 +5,6 @@ import {
   HttpCode,
   HttpStatus,
   Param,
-  Patch,
   Post,
   Query,
   Req,
@@ -14,11 +13,9 @@ import type { Request } from 'express';
 import {
   createSaleSchema,
   cancelSaleSchema,
-  updateSaleSchema,
   paginationSchema,
   type CreateSaleInput,
   type CancelSaleInput,
-  type UpdateSaleInput,
   type PaginationInput,
 } from '@prince-net/validation';
 import { ZodValidationPipe } from '../common/pipes/zod-validation.pipe';
@@ -83,19 +80,6 @@ export class SalesController {
     @Req() req: Request,
   ) {
     return this.salesService.cancel(id, body, user.userId, {
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
-    });
-  }
-
-  @Patch(':id')
-  async update(
-    @Param('id') id: string,
-    @Body(new ZodValidationPipe(updateSaleSchema)) body: UpdateSaleInput,
-    @CurrentUser() user: AuthUser,
-    @Req() req: Request,
-  ) {
-    return this.salesService.update(id, body, user.userId, {
       ip: req.ip,
       userAgent: req.get('user-agent'),
     });
