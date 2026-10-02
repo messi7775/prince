@@ -84,7 +84,7 @@ export function AdjustInventoryDialog({
           <DialogDescription>
             {batch && (
               <>
-                الدفعة الحالية: {batch.currentQuantity} وحدة • سعر الوحدة{' '}
+                الدفعة الحالية: {batch.currentQuantity} شدة • سعر الشدة{' '}
                 {batch.unitPrice}
               </>
             )}
@@ -114,8 +114,8 @@ export function AdjustInventoryDialog({
               disabled={adjustMutation.isPending}
             />
             <p className="text-xs text-muted-foreground">
-              <strong>+10</strong> = إضافة 10 وحدات • <strong>-5</strong> =
-              خصم 5 وحدات
+              <strong>+10</strong> = إضافة 10 شدات • <strong>-5</strong> =
+              خصم 5 شدات
             </p>
             {errors.quantityDelta && (
               <p className="text-xs text-destructive">

@@ -118,7 +118,7 @@ export function SaleFormDialog({ open, onOpenChange }: SaleFormDialogProps) {
         <DialogHeader>
           <DialogTitle>فاتورة بيع جديدة</DialogTitle>
           <DialogDescription>
-            اختر الموزع وأضف الباقات — الأسعار النهائية تُحسب في الخادم
+            اختر الموزع وأضف الباقات — الأسعار تُحسب في الخادم حسب سعر الشدة من المخزون
           </DialogDescription>
         </DialogHeader>
 

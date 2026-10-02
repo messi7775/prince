@@ -156,7 +156,7 @@ export function buildSaleReceipt(opts: {
     </div>
     <table>
       <thead>
-        <tr><th>الباقة</th><th style="text-align:center">الكمية</th><th style="text-align:left">سعر الوحدة</th><th style="text-align:left">الإجمالي</th></tr>
+        <tr><th>الباقة</th><th style="text-align:center">الكمية</th><th style="text-align:left">سعر الشدة</th><th style="text-align:left">الإجمالي</th></tr>
       </thead>
       <tbody>${itemsRows}</tbody>
     </table>

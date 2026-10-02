@@ -126,7 +126,7 @@ export function PackageFormDialog({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="price">السعر (ر.ي)</Label>
+              <Label htmlFor="price">سعر الكرت (ر.ي)</Label>
               <Input
                 id="price"
                 type="text"

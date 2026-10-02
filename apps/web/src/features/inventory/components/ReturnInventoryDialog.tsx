@@ -91,7 +91,7 @@ export function ReturnInventoryDialog({
           <DialogDescription>
             {batch && (
               <>
-                الدفعة: {batch.currentQuantity} وحدة • سعر الوحدة{' '}
+                الدفعة: {batch.currentQuantity} شدة • سعر الشدة{' '}
                 {batch.unitPrice}
               </>
             )}

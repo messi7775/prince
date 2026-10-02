@@ -286,7 +286,7 @@ export function SaleDetailsPage() {
               <TableRow>
                 <TableHead>الباقة</TableHead>
                 <TableHead>الكمية</TableHead>
-                <TableHead className="hidden sm:table-cell">سعر الوحدة</TableHead>
+                <TableHead className="hidden sm:table-cell">سعر الشدة</TableHead>
                 <TableHead>الإجمالي</TableHead>
               </TableRow>
             </TableHeader>

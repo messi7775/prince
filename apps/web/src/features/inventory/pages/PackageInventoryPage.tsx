@@ -86,7 +86,7 @@ export function PackageInventoryPage() {
 
         <PageHeader
           title={pkg.packageName}
-          description={`الرصيد الحالي: ${pkg.currentStock} وحدة`}
+          description={`الرصيد الحالي: ${pkg.currentStock} شدة`}
           actions={
             <Button onClick={() => setAddOpen(true)}>
               <Plus className="me-2 h-4 w-4" />
