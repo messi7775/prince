@@ -25,7 +25,7 @@ export function MobileDrawer({ open, onOpenChange }: MobileDrawerProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="fixed inset-y-0 end-0 start-auto h-full w-72 max-w-[85vw] translate-x-0 translate-y-0 rounded-none border-s p-0 lg:hidden data-[state=open]:slide-in-from-end data-[state=closed]:slide-out-to-end"
+        className="fixed inset-y-0 end-0 start-auto left-auto top-0 h-full w-72 max-w-[85vw] translate-x-0 translate-y-0 rounded-none border-s p-0 lg:hidden data-[state=open]:slide-in-from-end data-[state=closed]:slide-out-to-end"
       >
         <DialogTitle className="sr-only">القائمة الرئيسية</DialogTitle>
 
